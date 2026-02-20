@@ -499,5 +499,49 @@ code { font-family: var(--mono); font-size: .95em }
 .dfd-panel { overflow-y: auto }
 .dfd-panel-head { margin-bottom: 12px; border-bottom: 1px solid #f0f0f5; padding-bottom: 10px }
 .dfd-panel-head h3 { margin: 0 0 4px }
+
+.dfd-panel-body {
+  animation: fadeIn 0.3s ease-in-out;
+}
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
 .dfd-panel-body .kv { margin-bottom: 12px }
 .dfd-panel-body b { display: block; margin-bottom: 4px; font-size: 13px; color: var(--accent) }
+
+/* ── DFD Panel Pagination ── */
+.dfd-panel-nav { margin-top: 18px; border-top: 1px solid #f0f0f5; padding-top: 12px }
+.dfd-panel-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+.page-indicator {
+  font-size: 12px;
+  color: var(--muted);
+  font-weight: 500;
+  letter-spacing: 0.3px;
+}
+.page-num {
+  color: var(--accent);
+  font-weight: 700;
+}
+.dfd-panel-footer .btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+.dfd-panel-footer .btn {
+  flex: 1;
+  font-size: 12px;
+  padding: 8px 12px;
+}
+

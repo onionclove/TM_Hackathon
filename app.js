@@ -148,34 +148,101 @@ const componentInfo = {
   },
 };
 
-// ─── Render component detail panel ───────────────────────────────────────────
+// ─── Render component detail panel with pagination ───────────────────────────
 const compTitle = document.getElementById("compTitle");
 const compMeta  = document.getElementById("compMeta");
 const compBody  = document.getElementById("compBody");
+const dfdPanelNav = document.getElementById("dfdPanelNav");
+const compPrevBtn = document.getElementById("compPrevBtn");
+const compNextBtn = document.getElementById("compNextBtn");
+const pageNumber = document.getElementById("pageNumber");
+const pageTotal = document.getElementById("pageTotal");
 
-function renderComp(compKey) {
+// Track component pagination state
+let currentComponent = null;
+let currentPageIndex = 0;
+
+// Define the pages for each component
+const getComponentPages = (compKey) => {
   const c = componentInfo[compKey];
-  if (!c) return;
-  compTitle.textContent = c.title;
-  compMeta.textContent  = c.meta;
+  if (!c) return [];
 
   const list = arr => `<ul class="clean">${arr.map(x => `<li>${x}</li>`).join("")}</ul>`;
-  compBody.innerHTML = `
-    <div class="kv"><b>Responsibilities</b>${list(c.responsibilities)}</div>
-    <div class="kv"><b>Key Flows</b>${list(c.flows)}</div>
-    <div class="kv"><b>Data / Assets</b>${list(c.assets)}</div>
-    <div class="kv">
-      <b>Top Threats</b>${list(c.topThreats)}
-      <button class="btn small" id="openThreatsFromComp">Open related threats ↓</button>
-    </div>
-  `;
 
+  return [
+    {
+      title: "Responsibilities",
+      content: `<div class="kv"><b>Responsibilities</b>${list(c.responsibilities)}</div>`
+    },
+    {
+      title: "Key Flows",
+      content: `<div class="kv"><b>Key Flows</b>${list(c.flows)}</div>`
+    },
+    {
+      title: "Data &amp; Assets",
+      content: `<div class="kv"><b>Data / Assets</b>${list(c.assets)}</div>`
+    },
+    {
+      title: "Top Threats",
+      content: `<div class="kv"><b>Top Threats</b>${list(c.topThreats)}<button class="btn small" id="openThreatsFromComp">Open related threats ↓</button></div>`
+    }
+  ];
+};
+
+function renderCompPage() {
+  if (!currentComponent) return;
+  const pages = getComponentPages(currentComponent);
+  if (pages.length === 0 || currentPageIndex >= pages.length) return;
+
+  const page = pages[currentPageIndex];
+  compBody.innerHTML = page.content;
+
+  // Update page counter
+  pageNumber.textContent = currentPageIndex + 1;
+  pageTotal.textContent = pages.length;
+
+  // Show/hide nav buttons
+  compPrevBtn.disabled = currentPageIndex === 0;
+  compNextBtn.disabled = currentPageIndex === pages.length - 1;
+
+  // Attach event listener for "Open related threats" button if it exists
   document.getElementById("openThreatsFromComp")?.addEventListener("click", () => {
+    const c = componentInfo[currentComponent];
     document.querySelector("#threats")?.scrollIntoView({ behavior: "smooth" });
     document.getElementById("searchThreats").value = c.topThreats[0]?.split(" ")[0] || "";
     refreshThreatTable();
   });
 }
+
+function renderComp(compKey) {
+  const c = componentInfo[compKey];
+  if (!c) return;
+  
+  currentComponent = compKey;
+  currentPageIndex = 0;
+  
+  compTitle.textContent = c.title;
+  compMeta.textContent = c.meta;
+  
+  dfdPanelNav.style.display = "block";
+  renderCompPage();
+}
+
+// Pagination event listeners
+compPrevBtn?.addEventListener("click", () => {
+  if (currentPageIndex > 0) {
+    currentPageIndex--;
+    renderCompPage();
+  }
+});
+
+compNextBtn?.addEventListener("click", () => {
+  const pages = getComponentPages(currentComponent);
+  if (currentPageIndex < pages.length - 1) {
+    currentPageIndex++;
+    renderCompPage();
+  }
+});
 
 // ─── DFD ZOOM — transform-origin approach ────────────────────────────────────
 //
