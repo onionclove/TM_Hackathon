@@ -1,0 +1,356 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Threat Modelling Connect — Group 27</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <!-- Floating particles / ambient -->
+  <div class="ambient" aria-hidden="true"></div>
+
+  <!-- Landing / Cover -->
+  <section id="landing" class="panel landing">
+    <div class="landing-card">
+      <div class="badge">Group 27</div>
+      <h1>Threat Modelling Connect</h1>
+      <p class="sub">
+        Interactive report for our threat modelling exercise (Auth • Media Upload • Payment).
+      </p>
+
+      <div class="names">
+        <label>Team Members</label>
+        <div style="font-weight:600; color:var(--text); font-size:15px;">Group 27</div>
+      </div>
+
+      <button id="startBtn" class="btn primary">
+        Start!
+        <span class="spark" aria-hidden="true"></span>
+      </button>
+
+      <div class="mini">
+        <div class="mini-card">
+          <div class="mini-title">Objective</div>
+          <div class="mini-body">Identify risks, assess business impact, propose mitigations.</div>
+        </div>
+        <div class="mini-card">
+          <div class="mini-title">Focus Areas</div>
+          <div class="mini-body">Authentication • Media Upload • Payment/Marketplace</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Sticky Nav -->
+  <header class="topbar" id="topbar">
+    <div class="topbar-left">
+      <div class="dot"></div>
+      <div class="topbar-title">Group 27 — Threat Modelling Connect</div>
+    </div>
+    <nav class="topbar-nav">
+      <a href="#intro" class="navlink">Intro</a>
+      <a href="#overview" class="navlink">System</a>
+      <a href="#dfds" class="navlink">DFDs</a>
+      <a href="#threats" class="navlink">Threats</a>
+      <a href="#risk" class="navlink">Risk</a>
+    </nav>
+  </header>
+
+  <main class="container">
+    <!-- 1) Introductions -->
+    <section id="intro" class="panel">
+      <div class="panel-head">
+        <h2>1. Introduction</h2>
+        <p class="muted">Context, executive summary, objective, scope, assumptions.</p>
+      </div>
+
+      <div class="grid two">
+        <article class="card">
+          <h3>Context</h3>
+          <p>
+            We performed threat modelling on an online browser-based multiplayer city-building game
+            and narrowed the system into manageable components for deeper analysis.
+          </p>
+        </article>
+
+        <article class="card">
+          <h3>Executive Summary</h3>
+          <p>
+            We focused on three high-impact areas: <b>authentication</b>, <b>media uploads</b>, and
+            <b>payment/marketplace</b>. Key risks center around financial loss, abuse of external callbacks,
+            and integrity of user assets and transactions.
+          </p>
+        </article>
+      </div>
+
+      <div class="grid two">
+        <article class="card">
+          <h3>Objective</h3>
+          <p>
+            Identify risks in the game’s system, explain business impact, and recommend mitigations
+            to minimize impact.
+          </p>
+        </article>
+
+        <article class="card">
+          <h3>Scope & Assumptions</h3>
+          <ul class="clean">
+            <li><b>In scope:</b> internal components modeled in our DFDs (focus areas below).</li>
+            <li><b>Out of scope:</b external entities and systems not explicitly modeled (except the listed external payment gateway).</li>
+            <li><b>Assumptions:</b Certain protocol and control details are assumed where architecture isn’t fully specified.</li>
+          </ul>
+          <details class="details">
+            <summary>Show assumptions register (editable)</summary>
+            <div class="table-wrap">
+              <table class="table" id="assumptionsTable">
+                <thead>
+                  <tr>
+                    <th>Assumption</th>
+                    <th>Reason</th>
+                    <th>Security Impact</th>
+                    <th>How to Validate</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <!-- injected by JS -->
+                </tbody>
+              </table>
+            </div>
+          </details>
+        </article>
+      </div>
+    </section>
+
+    <!-- 2) System overview -->
+    <section id="overview" class="panel">
+      <div class="panel-head">
+        <h2>2. System Overview</h2>
+        <p class="muted">General DFD + component DFDs (Auth, Media Upload, Payment).</p>
+      </div>
+
+      <div class="grid two">
+        <article class="card">
+          <h3>Key Components (Focus Areas)</h3>
+          <ul class="clean">
+            <li><b>Authentication Service</b> — identities, sessions, tokens</li>
+            <li><b>Media Upload Service</b> — UGC uploads, scanning, moderation</li>
+            <li><b>Payment & Marketplace</b> — orders, entitlements, refunds, webhooks</li>
+          </ul>
+          <p class="muted tiny">
+            Based on your report draft: focus areas selected due to business impact and attack surface.
+          </p>
+        </article>
+
+        <article class="card">
+          <h3>How to Read This Report</h3>
+          <ol class="clean">
+            <li>Review DFDs</li>
+            <li>Click components to see flows + assets</li>
+            <li>Threat table maps STRIDE → impact → mitigations</li>
+            <li>Risk matrix summarizes top risks</li>
+          </ol>
+        </article>
+      </div>
+    </section>
+
+    <!-- 3) DFDs -->
+    <section id="dfds" class="panel">
+      <div class="panel-head">
+        <h2>3. Data Flow Diagrams</h2>
+        <p class="muted">Click components on the DFD to reveal details.</p>
+      </div>
+
+      <div class="tabs" role="tablist" aria-label="DFD Tabs">
+  <button class="tab active" role="tab" aria-selected="true" data-tab="system">General System</button>
+  <button class="tab" role="tab" aria-selected="false" data-tab="media">Media Upload</button>
+  <button class="tab" role="tab" aria-selected="false" data-tab="payment">Payment & Marketplace</button>
+  <button class="tab" role="tab" aria-selected="false" data-tab="auth">Auth</button>
+      </div>
+
+      <div class="dfd-grid">
+        <div class="dfd-stage">
+          <!-- General System DFD -->
+          <div class="dfd-view active" id="dfd-system">
+            <div class="card">
+              <h3>General System DFD</h3>
+              <p class="muted">Add your general system DFD image to <code>assets/dfd-system.png</code> and update the HTML.</p>
+            </div>
+          </div>
+
+          <!-- Media Upload DFD -->
+          <div class="dfd-view" id="dfd-media">
+            <div class="card">
+              <h3>Media Upload DFD</h3>
+              <p class="muted">Add your media upload DFD image to <code>assets/dfd-media.png</code>.</p>
+            </div>
+          </div>
+
+          <!-- Payment DFD -->
+          <div class="dfd-view" id="dfd-payment">
+            <div class="dfd-wrap" id="paymentDfdWrap">
+              <img
+                src="assets/dfd-payment.svg"
+                alt="Payment & Marketplace DFD"
+                class="dfd-img"
+                id="paymentDfdImg"
+              />
+
+              <!-- Hotspots (percentage-based; adjust if your image crop changes) -->
+              <button class="hotspot" style="left:17%;top:25%;width:9%;height:14%;" data-comp="apiGateway" aria-label="API Gateway"></button>
+              <button class="hotspot" style="left:46%;top:25%;width:15%;height:22%;" data-comp="marketplace" aria-label="Marketplace Service"></button>
+              <button class="hotspot" style="left:63%;top:25%;width:15%;height:22%;" data-comp="paymentAdapter" aria-label="Payment Integration Adapter"></button>
+              <button class="hotspot" style="left:49%;top:52%;width:13%;height:18%;" data-comp="entitlement" aria-label="Entitlement Service"></button>
+
+              <button class="hotspot" style="left:42%;top:74%;width:30%;height:10%;" data-comp="datastores" aria-label="Data Stores"></button>
+              <button class="hotspot" style="left:78%;top:18%;width:20%;height:16%;" data-comp="externalGateway" aria-label="External Payment Gateway"></button>
+              <button class="hotspot" style="left:78%;top:50%;width:20%;height:22%;" data-comp="secretsVault" aria-label="Secrets Vault"></button>
+            </div>
+
+            <div class="dfd-toolbar">
+              <div class="pill">Interactive DFD</div>
+              <div style="display: flex; gap: 12px; align-items: center;">
+                <span class="hint tiny">Tip: click components to zoom</span>
+                <button class="zoom-reset" id="zoomReset">Reset Zoom</button>
+              </div>
+            </div>
+
+          <!-- Auth DFD -->
+          <div class="dfd-view" id="dfd-auth">
+            <div class="card">
+              <h3>Auth DFD</h3>
+              <p class="muted">Add your auth DFD image to <code>assets/dfd-auth.png</code>.</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Side panel: component details -->
+        <aside class="dfd-panel card" id="dfdPanel">
+          <div class="dfd-panel-head">
+            <h3 id="compTitle">Click a component</h3>
+            <div class="muted tiny" id="compMeta">Payment & Marketplace</div>
+          </div>
+          <div id="compBody" class="dfd-panel-body">
+            <p class="muted">
+              Click on the DFD to see: responsibilities, key flows, data assets, and top threats.
+            </p>
+          </div>
+        </aside>
+      </div>
+    </section>
+
+    <!-- 4) Threat modelling -->
+    <section id="threats" class="panel">
+      <div class="panel-head">
+        <h2>4. Threat Modelling (STRIDE)</h2>
+        <p class="muted">Filter the table; click a threat to see details + mitigations.</p>
+      </div>
+
+      <div class="grid two">
+        <div class="card">
+          <h3>Filter</h3>
+          <div class="filters">
+            <select id="strideFilter" class="select">
+              <option value="ALL">All STRIDE</option>
+              <option value="S">Spoofing</option>
+              <option value="T">Tampering</option>
+              <option value="R">Repudiation</option>
+              <option value="I">Information Disclosure</option>
+              <option value="D">Denial of Service</option>
+              <option value="E">Elevation of Privilege</option>
+            </select>
+
+            <select id="riskFilter" class="select">
+              <option value="ALL">All Risk Levels</option>
+              <option value="Acceptable">Acceptable (1-4)</option>
+              <option value="Adequate">Adequate (5-9)</option>
+              <option value="Tolerable">Tolerable (10-16)</option>
+              <option value="Unacceptable">Unacceptable (17-25)</option>
+            </select>
+
+            <input id="searchThreats" class="input" placeholder="Search threats (e.g. webhook, refund)"/>
+          </div>
+        </div>
+
+        <div class="card">
+          <h3>Threat Detail</h3>
+          <div id="threatDetail" class="muted">
+            Select a threat row to view details.
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="table-wrap">
+          <table class="table" id="threatTable">
+  <thead>
+    <tr>
+      <th>ID</th>
+      <th>Subsystem</th>
+      <th>Components Affected</th>
+      <th>Data Asset</th>
+      <th>Data Flow</th>
+      <th>S</th>
+      <th>T</th>
+      <th>R</th>
+      <th>I</th>
+      <th>D</th>
+      <th>E</th>
+      <th>Threat Name</th>
+      <th>Threat Description</th>
+      <th>Possible Impact</th>
+      <th>Likelihood Score</th>
+      <th>Impact Score</th>
+    </tr>
+  </thead>
+  <tbody>
+    <!-- injected by JS -->
+  </tbody>
+</table>
+        </div>
+      </div>
+    </section>
+
+    <!-- 5) Risk matrix -->
+    <section id="risk" class="panel">
+      <div class="panel-head">
+        <h2>5. Risk Matrix</h2>
+        <p class="muted">Click a cell to highlight threats in that band.</p>
+      </div>
+
+      <div class="grid two">
+        <div class="card">
+          <div class="matrix" id="riskMatrix" aria-label="Risk Matrix">
+            <!-- built by JS -->
+          </div>
+          <div class="muted tiny">Risk = Impact × Likelihood (qualitative banding for presentation)</div>
+        </div>
+
+        <div class="card">
+          <h3>Selected Band</h3>
+          <div id="matrixDetail" class="muted">Click a matrix cell to view matching threats.</div>
+        </div>
+      </div>
+    </section>
+
+    <footer class="footer">
+      <div class="muted tiny">
+        Built as an interactive report. Data seeded from your report draft :contentReference[oaicite:2]{index=2}
+      </div>
+    </footer>
+  </main>
+
+  <!-- Quick modal -->
+  <div class="modal" id="modal" aria-hidden="true">
+    <div class="modal-card">
+      <div class="modal-head">
+        <div id="modalTitle" class="modal-title">Title</div>
+        <button id="modalClose" class="btn ghost small" aria-label="Close">✕</button>
+      </div>
+      <div id="modalBody" class="modal-body"></div>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
