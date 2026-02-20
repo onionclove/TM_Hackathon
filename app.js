@@ -584,76 +584,6 @@ const threats = [
     ],
   },
   {
-    id: "T-M01",
-    subsystem: "Media Upload",
-    componentsAffected: "Media Upload Service, File Storage",
-    dataAsset: "Uploaded files / user-generated content",
-    dataFlow: "Player > API Gateway > Media Upload Service > File Storage",
-    stride: { S:false, T:true, R:false, I:true, D:false, E:false },
-    threatName: "Malicious File Upload",
-    threatDescription: "Attacker uploads executable, malware, or obfuscated malicious content disguised as media that could compromise games or infect users.",
-    possibleImpact: "Malware distribution, reputation damage, legal liability, player account compromise",
-    likelihoodScore: 4,
-    impactScore: 5,
-    mitigations: [
-      {
-        title: "File Type Validation",
-        description: "Whitelist only allowed media types (jpg, png, mp4, etc). Validate magic bytes, not just extensions.",
-        priority: "CRITICAL",
-      },
-      {
-        title: "Antivirus & Malware Scanning",
-        description: "Scan all uploads with ClamAV or equivalent before storing. Quarantine suspicious files.",
-        priority: "CRITICAL",
-      },
-      {
-        title: "File Size Limits",
-        description: "Enforce strict size caps per file type to prevent storage exhaustion and scanning bypasses.",
-        priority: "HIGH",
-      },
-      {
-        title: "Content Moderation & Hashing",
-        description: "Use perceptual hashing to detect known malicious/CSAM content. Manual review for edge cases.",
-        priority: "HIGH",
-      },
-    ],
-  },
-  {
-    id: "T-M02",
-    subsystem: "Media Upload",
-    componentsAffected: "File Storage, Media Serving",
-    dataAsset: "File system integrity, user media",
-    dataFlow: "Media Upload Service > File Storage (write)",
-    stride: { S:false, T:true, R:false, I:false, D:false, E:false },
-    threatName: "File Overwrite / Path Traversal",
-    threatDescription: "Attacker manipulates file paths to overwrite legitimate files or escape upload directory using path traversal (../).",
-    possibleImpact: "Data corruption, service disruption, unauthorized access to system files",
-    likelihoodScore: 3,
-    impactScore: 4,
-    mitigations: [
-      {
-        title: "Path Traversal Protection",
-        description: "Reject any filename containing '..' or absolute paths. Use random UUIDs as filenames, not user input.",
-        priority: "CRITICAL",
-      },
-      {
-        title: "Strict Directory Isolation",
-        description: "Store uploads in a dedicated, write-only directory with no executable permissions. Use ACLs to prevent escape.",
-        priority: "CRITICAL",
-      },
-      {
-        title: "Immutable Filenames",
-        description: "Generate immutable filenames server-side (e.g., UUID v4). Map to user metadata separately.",
-        priority: "HIGH",
-      },
-      {
-        title: "File Integrity Checks",
-        description: "Store file hash on upload; verify during retrieval to detect tampering or replacement.",
-        priority: "MEDIUM",
-      },
-    ],
-  },
-  {
     id: "T-A01",
     subsystem: "Auth",
     componentsAffected: "Auth Service, Session Store",
@@ -741,6 +671,18 @@ const threats = [
     possibleImpact: "Reputation damage to the impersonated user, may be chained with repudiation attacks to cause further disruption and damage. May result in false moderation actions against the impersonated user.",
     likelihoodScore: 3,
     impactScore: 3,
+    mitigations: [
+      {
+        title: "JWT Validation",
+        description: "Validate JWT signature and expiry on every upload request. Use short-lived tokens.",
+        priority: "CRITICAL",
+      },
+      {
+        title: "Rate Limiting per User",
+        description: "Implement per-user upload rate limits to prevent abuse.",
+        priority: "HIGH",
+      },
+    ],
   },
   {
     id: "T-M02",
@@ -754,6 +696,23 @@ const threats = [
     possibleImpact: "Upload service stops working, which causes disruptions to profile updates, mod development, other aspects requiring media upload.",
     likelihoodScore: 5,
     impactScore: 4,
+    mitigations: [
+      {
+        title: "Rate Limiting",
+        description: "Implement aggressive rate limiting on upload endpoints (per IP and per user).",
+        priority: "CRITICAL",
+      },
+      {
+        title: "File Size Caps",
+        description: "Enforce strict file size limits per upload and per user quota.",
+        priority: "CRITICAL",
+      },
+      {
+        title: "CDN/WAF Protection",
+        description: "Use CDN with DDoS protection to absorb traffic spikes.",
+        priority: "HIGH",
+      },
+    ],
   },
   {
     id: "T-M03",
@@ -767,6 +726,23 @@ const threats = [
     possibleImpact: "Users reading the malicious media (such as by viewing a profile picture) may be executing attacker-controlled code, which leads to client-side ramifications such as token or session theft as well as malicious content display. If triggered in workers, also leads to RCE in the infrastructure itself with potential lateral movement or data exfiltration.",
     likelihoodScore: 3,
     impactScore: 5,
+    mitigations: [
+      {
+        title: "Content Type Validation",
+        description: "Validate file magic bytes, not just extensions. Re-encode images server-side to strip metadata.",
+        priority: "CRITICAL",
+      },
+      {
+        title: "Content Security Policy",
+        description: "Serve user content from separate domain with strict CSP headers preventing script execution.",
+        priority: "CRITICAL",
+      },
+      {
+        title: "Sandboxed Scanning",
+        description: "Process uploads in isolated workers/containers with no network access.",
+        priority: "HIGH",
+      },
+    ],
   },
   {
     id: "T-M04",
@@ -780,6 +756,18 @@ const threats = [
     possibleImpact: "Attacker may selectively allow certain users' uploads to go through while blocking others, damaging integrity. They may also upload further malicious files by abusing their moderator privileges to allow malicious-flagged files through.",
     likelihoodScore: 2,
     impactScore: 4,
+    mitigations: [
+      {
+        title: "MFA for Moderators",
+        description: "Require multi-factor authentication for all moderator accounts.",
+        priority: "CRITICAL",
+      },
+      {
+        title: "Session Monitoring",
+        description: "Monitor moderator sessions for anomalous behavior (IP changes, unusual activity patterns).",
+        priority: "HIGH",
+      },
+    ],
   },
   {
     id: "T-M05",
@@ -793,6 +781,18 @@ const threats = [
     possibleImpact: "If unsafe content is released onto the site, there is the obvious risk of harm to users on the site through display of inappropriate or inflammatory content. If moderators cannot ascertain who approved said content, there is no accountability and repeated offenses may occur.",
     likelihoodScore: 2,
     impactScore: 4,
+    mitigations: [
+      {
+        title: "Audit Logging",
+        description: "Log all moderator actions (approvals, rejections) with timestamps and moderator ID in immutable audit log.",
+        priority: "CRITICAL",
+      },
+      {
+        title: "Digital Signatures",
+        description: "Sign moderation decisions cryptographically to ensure non-repudiation.",
+        priority: "HIGH",
+      },
+    ],
   },
   {
     id: "T-M06",
@@ -806,6 +806,23 @@ const threats = [
     possibleImpact: "Approved bucket leakage may lead to financial loss to the company through scraping of assets locked behind paywalls or IP theft. Quarantine bucket leakage may cause users to inadvertently download harmful/malicious files still on the site. Potential harm to minors who may be tricked into downloading inappropriate content.",
     likelihoodScore: 4,
     impactScore: 4,
+    mitigations: [
+      {
+        title: "Bucket Permissions",
+        description: "Ensure storage buckets are private by default. Use IAM policies with least privilege access.",
+        priority: "CRITICAL",
+      },
+      {
+        title: "Pre-signed URLs",
+        description: "Serve content through time-limited pre-signed URLs instead of direct bucket access.",
+        priority: "CRITICAL",
+      },
+      {
+        title: "Regular Security Audits",
+        description: "Automated scanning for bucket misconfigurations and public access.",
+        priority: "HIGH",
+      },
+    ],
   },
 ];
 
@@ -977,27 +994,19 @@ function buildMatrix() {
     likelihoodLevels.forEach(likelihood => {
       const score = impact.score * likelihood.score;
       // Count threats matching this impact × likelihood
-      const threatCount = threats.filter(t => 
+      const matchingThreats = threats.filter(t => 
         t.impactScore === impact.score && t.likelihoodScore === likelihood.score
-      ).length;
-      const cell  = el("div","mcell",`${score}<div style="font-size:11px;margin-top:4px;opacity:0.8">${threatCount} threat${threatCount !== 1 ? 's' : ''}</div>`);
+      );
+      // Create pips display
+      const pipsHtml = matchingThreats.length > 0 
+        ? `<div class="pips">${'<span class="pip">×</span>'.repeat(matchingThreats.length)}</div>`
+        : '';
+      const cell  = el("div","mcell",`<div class="mcell-score">${score}</div>${pipsHtml}`);
       cell.dataset.score      = score;
       cell.dataset.riskLevel  = getRiskLevel(score);
       cell.dataset.threatCount = matchingThreats.length;
       
-      // Display threat count only
-      if (matchingThreats.length > 0) {
-        cell.innerHTML = `<span class="threat-count">${matchingThreats.length}</span>`;
-      } else {
-        cell.innerHTML = "";
-      }
-      
       cell.title = `Impact ${impact.score} × Likelihood ${likelihood.score} = ${score} (${getRiskLevel(score)}) | ${matchingThreats.length} threat(s)`;
-      
-      // Hover to show threat count
-      cell.addEventListener("mouseenter", () => {
-        cell.setAttribute("data-hover-count", `${matchingThreats.length} threat(s)`);
-      });
       
       cell.addEventListener("click", (e) => {
         e.preventDefault();
@@ -1005,8 +1014,6 @@ function buildMatrix() {
         cell.classList.add("active");
         showBand(score);
       });
-      
-
       
       matrix.appendChild(cell);
     });
@@ -1083,7 +1090,13 @@ function getRiskClass(score) {
 }
 
 function populateRemediationThreats(subsystem) {
-  const filtered = threats.filter(t => t.subsystem === subsystem);
+  // Handle Media Upload tab by showing both Upload Path and Quarantine threats
+  let filtered;
+  if (subsystem === "Media Upload") {
+    filtered = threats.filter(t => t.subsystem === "Upload Path" || t.subsystem === "Quarantine and Processing");
+  } else {
+    filtered = threats.filter(t => t.subsystem === subsystem);
+  }
   remedThreatsTitle.textContent = `Threats in ${subsystem.replace(" & Marketplace", " & Services")}`;
   remedThreatsList.innerHTML = filtered.map(t => {
     const score = t.likelihoodScore * t.impactScore;
@@ -1169,7 +1182,12 @@ function showRemediationDetail(threatId) {
     df.forEach((comp, i) => {
       if (i === df.length - 1) {
         steps.push({ title: `${comp} processes event`, sub: comp });
-        steps.push({ title: 'Order marked as PAID / Action applied', sub: 'State transition and entitlement' });
+        // For media upload threats (T-M01 to T-M06), use the impact section instead of generic text
+        if (thr.id && /^T-M0[1-6]$/.test(thr.id)) {
+          steps.push({ title: 'Attack Consequences & Impact', sub: thr.possibleImpact || 'Impact realized' });
+        } else {
+          steps.push({ title: 'Order marked as PAID / Action applied', sub: 'State transition and entitlement' });
+        }
       } else {
         steps.push({ title: `${comp} receives event`, sub: comp });
       }

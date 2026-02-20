@@ -101,8 +101,14 @@
         <article class="card">
           <h3>Objective</h3>
           <p>
-            Identify risks in the game's system, explain business impact, and recommend mitigations
-            to minimize impact.
+            The objective of this threat modelling exercise is to identify risks in the game’s system and elaborate on their business impact, followed by development of recommendations on how these risks can be mitigated to minimise said impact. We have prioritised the following goals to achieve using our threat model: 
+
+            <ul>
+              <li>User safety</li>
+              <li>Game integrity/Fair play</li>
+              <li>Financial integrity</li>
+            </ul>
+
           </p>
         </article>
 
@@ -114,7 +120,7 @@
             <li><b>Assumptions:</b> Certain protocol and control details are assumed where architecture isn't fully specified.</li>
           </ul>
           <details class="details">
-            <summary>Show assumptions register (editable)</summary>
+            <summary>Show assumptions register</summary>
             <div class="table-wrap">
               <table class="table" id="assumptionsTable">
                 <thead>
@@ -132,6 +138,21 @@
             </div>
           </details>
         </article>
+      </div>
+
+      <div class="card">
+        <h3>Business Consideration</h3>
+        <p>
+          This threat modeling exercise directly supports business continuity and risk management objectives.
+          By identifying and mitigating threats to our authentication, media upload, and payment systems, we:
+        </p>
+        <ul class="clean">
+          <li><b>Protect revenue streams:</b> Prevent payment fraud, unauthorized refunds, and marketplace manipulation that could result in direct financial losses.</li>
+          <li><b>Maintain user trust:</b> Safeguard user credentials and personal data to preserve our reputation and avoid costly breaches that could lead to user churn.</li>
+          <li><b>Ensure platform integrity:</b> Prevent malicious content uploads and moderation system abuse that could expose users to harmful content and regulatory penalties.</li>
+          <li><b>Reduce operational costs:</b> Minimize the impact of denial-of-service attacks and system abuse that could overwhelm infrastructure and increase operational expenses.</li>
+          <li><b>Meet compliance requirements:</b> Add security features to align with major regulations such as GDPR, focusing on user safety and privacy.</li>
+        </ul>
       </div>
     </section>
 
@@ -334,29 +355,6 @@
         </aside>
       </div>
     </section>
-
-    <!-- 4) Risk matrix (moved before threats) -->
-    <section id="risk" class="panel">
-      <div class="panel-head">
-        <h2>4. Risk Matrix</h2>
-        <p class="muted">Click a cell to view threats. Hover to see threat count. Click threat IDs to jump to details.</p>
-      </div>
-
-      <div class="grid two">
-        <div class="card">
-          <div class="matrix" id="riskMatrix" aria-label="Risk Matrix">
-            <!-- built by JS -->
-          </div>
-          <div class="muted tiny">Risk = Impact × Likelihood</div>
-        </div>
-
-        <div class="card">
-          <h3>Selected Band</h3>
-          <div id="matrixDetail" class="muted">Click a matrix cell to view matching threats.</div>
-        </div>
-      </div>
-    </section>
-
     <!-- 5) Threat modelling -->
     <section id="threats" class="panel">
       <div class="panel-head">
@@ -364,10 +362,9 @@
         <p class="muted">Filter the table; click a threat to see details + mitigations.</p>
       </div>
 
-      <div class="grid two">
-        <div class="card">
-          <h3>Filter</h3>
-          <div class="filters">
+      <div class="card">
+        <h3>Filter</h3>
+        <div class="filters">
             <select id="strideFilter" class="select">
               <option value="ALL">All STRIDE</option>
               <option value="S">Spoofing</option>
@@ -388,13 +385,12 @@
 
             <input id="searchThreats" class="input" placeholder="Search threats (e.g. webhook, refund)"/>
           </div>
-        </div>
+      </div>
 
-        <div class="card">
-          <h3>Threat Detail</h3>
-          <div id="threatDetail" class="muted">
-            Select a threat row to view details.
-          </div>
+      <div class="card">
+        <h3>Threat Detail</h3>
+        <div id="threatDetail" class="muted">
+          Select a threat row to view details.
         </div>
       </div>
 
@@ -482,6 +478,14 @@
             </div>
           </div>
         </div>
+      </div>
+    </section>
+
+    <!-- 7) Reflections -->
+    <section id="reflections" class="panel">
+      <div class="panel-head">
+        <h2>7. Reflections</h2>
+        <p class="muted">Team insights and lessons learned.</p>
       </div>
     </section>
 

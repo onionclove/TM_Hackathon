@@ -97,6 +97,7 @@ code { font-family: var(--mono); font-size: .95em }
   border-radius: var(--radius);
   box-shadow: 0 4px 16px rgba(108, 92, 231, .06);
   padding: 16px;
+  margin: 4px;
   transition: border-color .2s ease, box-shadow .2s ease;
 }
 .card:hover {
@@ -509,6 +510,32 @@ code { font-family: var(--mono); font-size: .95em }
 .mcell[data-score="21"],.mcell[data-score="22"],.mcell[data-score="23"],.mcell[data-score="24"],.mcell[data-score="25"] {
   border-color: #e63946; background: rgba(230,57,70,.12); color: #991620;
 }
+
+/* ── Matrix cell score and pips ── */
+.mcell-score {
+  font-size: 18px;
+  font-weight: 800;
+  margin-bottom: 6px;
+}
+.pips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  justify-content: center;
+  margin-top: 6px;
+}
+.pip {
+  font-size: 16px;
+  font-weight: 900;
+  line-height: 1;
+}
+/* Pip colors match the cell background */
+.mcell[data-score="1"] .pip,.mcell[data-score="2"] .pip,.mcell[data-score="3"] .pip,.mcell[data-score="4"] .pip { color: #1a6b38 }
+.mcell[data-score="5"] .pip,.mcell[data-score="6"] .pip,.mcell[data-score="7"] .pip,.mcell[data-score="8"] .pip,.mcell[data-score="9"] .pip { color: #665d00 }
+.mcell[data-score="10"] .pip,.mcell[data-score="11"] .pip,.mcell[data-score="12"] .pip,
+.mcell[data-score="13"] .pip,.mcell[data-score="14"] .pip,.mcell[data-score="15"] .pip,.mcell[data-score="16"] .pip { color: #cc8400 }
+.mcell[data-score="17"] .pip,.mcell[data-score="18"] .pip,.mcell[data-score="19"] .pip,.mcell[data-score="20"] .pip,
+.mcell[data-score="21"] .pip,.mcell[data-score="22"] .pip,.mcell[data-score="23"] .pip,.mcell[data-score="24"] .pip,.mcell[data-score="25"] .pip { color: #991620 }
 
 /* ── Matrix cell threat IDs ── */
 .cell-threat-id {
