@@ -88,17 +88,17 @@
         <article class="card">
           <h3>Objective</h3>
           <p>
-            Identify risks in the game’s system, explain business impact, and recommend mitigations
+            Identify risks in the game's system, explain business impact, and recommend mitigations
             to minimize impact.
           </p>
         </article>
 
         <article class="card">
-          <h3>Scope & Assumptions</h3>
+          <h3>Scope &amp; Assumptions</h3>
           <ul class="clean">
             <li><b>In scope:</b> internal components modeled in our DFDs (focus areas below).</li>
-            <li><b>Out of scope:</b external entities and systems not explicitly modeled (except the listed external payment gateway).</li>
-            <li><b>Assumptions:</b Certain protocol and control details are assumed where architecture isn’t fully specified.</li>
+            <li><b>Out of scope:</b> external entities and systems not explicitly modeled (except the listed external payment gateway).</li>
+            <li><b>Assumptions:</b> Certain protocol and control details are assumed where architecture isn't fully specified.</li>
           </ul>
           <details class="details">
             <summary>Show assumptions register (editable)</summary>
@@ -135,7 +135,7 @@
           <ul class="clean">
             <li><b>Authentication Service</b> — identities, sessions, tokens</li>
             <li><b>Media Upload Service</b> — UGC uploads, scanning, moderation</li>
-            <li><b>Payment & Marketplace</b> — orders, entitlements, refunds, webhooks</li>
+            <li><b>Payment &amp; Marketplace</b> — orders, entitlements, refunds, webhooks</li>
           </ul>
           <p class="muted tiny">
             Based on your report draft: focus areas selected due to business impact and attack surface.
@@ -162,14 +162,15 @@
       </div>
 
       <div class="tabs" role="tablist" aria-label="DFD Tabs">
-  <button class="tab active" role="tab" aria-selected="true" data-tab="system">General System</button>
-  <button class="tab" role="tab" aria-selected="false" data-tab="media">Media Upload</button>
-  <button class="tab" role="tab" aria-selected="false" data-tab="payment">Payment & Marketplace</button>
-  <button class="tab" role="tab" aria-selected="false" data-tab="auth">Auth</button>
+        <button class="tab active" role="tab" aria-selected="true" data-tab="system">General System</button>
+        <button class="tab" role="tab" aria-selected="false" data-tab="media">Media Upload</button>
+        <button class="tab" role="tab" aria-selected="false" data-tab="payment">Payment &amp; Marketplace</button>
+        <button class="tab" role="tab" aria-selected="false" data-tab="auth">Auth</button>
       </div>
 
       <div class="dfd-grid">
         <div class="dfd-stage">
+
           <!-- General System DFD -->
           <div class="dfd-view active" id="dfd-system">
             <div class="card">
@@ -188,32 +189,42 @@
 
           <!-- Payment DFD -->
           <div class="dfd-view" id="dfd-payment">
+
+            <div class="dfd-toolbar">
+              <div class="pill">Interactive DFD</div>
+              <div style="display:flex;gap:12px;align-items:center;">
+                <span class="hint tiny">Tip: click components to zoom in</span>
+                <button class="zoom-reset" id="zoomReset">Reset Zoom</button>
+              </div>
+            </div>
+
+            <!--
+              KEY FIX: dfd-wrap has overflow:hidden and a fixed height.
+              The image is scaled via transform-origin set to the hotspot centre,
+              so CSS zoom naturally brings that point into view — no scroll math.
+              Hotspots are children of dfd-wrap so they scale with the image.
+            -->
             <div class="dfd-wrap" id="paymentDfdWrap">
               <img
                 src="assets/dfd-payment.svg"
-                alt="Payment & Marketplace DFD"
+                alt="Payment &amp; Marketplace DFD"
                 class="dfd-img"
                 id="paymentDfdImg"
               />
 
-              <!-- Hotspots (percentage-based; adjust if your image crop changes) -->
-              <button class="hotspot" style="left:17%;top:25%;width:9%;height:14%;" data-comp="apiGateway" aria-label="API Gateway"></button>
-              <button class="hotspot" style="left:46%;top:25%;width:15%;height:22%;" data-comp="marketplace" aria-label="Marketplace Service"></button>
-              <button class="hotspot" style="left:63%;top:25%;width:15%;height:22%;" data-comp="paymentAdapter" aria-label="Payment Integration Adapter"></button>
-              <button class="hotspot" style="left:49%;top:52%;width:13%;height:18%;" data-comp="entitlement" aria-label="Entitlement Service"></button>
-
-              <button class="hotspot" style="left:42%;top:74%;width:30%;height:10%;" data-comp="datastores" aria-label="Data Stores"></button>
-              <button class="hotspot" style="left:78%;top:18%;width:20%;height:16%;" data-comp="externalGateway" aria-label="External Payment Gateway"></button>
-              <button class="hotspot" style="left:78%;top:50%;width:20%;height:22%;" data-comp="secretsVault" aria-label="Secrets Vault"></button>
+              <!--
+                Hotspots: percentage-based, sitting on top of the image.
+                Their left/top values are the component centre coords we zoom toward.
+              -->
+              <button class="hotspot" style="left:17%;top:25%;width:9%;height:14%;"   data-comp="apiGateway"      data-zoom="2.8" aria-label="API Gateway"></button>
+              <button class="hotspot" style="left:32%;top:18%;width:13%;height:18%;"  data-comp="marketplace"     data-zoom="2.8" aria-label="Marketplace Service"></button>
+              <button class="hotspot" style="left:48%;top:18%;width:13%;height:18%;"  data-comp="paymentAdapter"  data-zoom="2.8" aria-label="Payment Integration Adapter"></button>
+              <button class="hotspot" style="left:36%;top:45%;width:9%;height:14%;"  data-comp="entitlement"     data-zoom="2.8" aria-label="Entitlement Service"></button>
+              <button class="hotspot" style="left:15%;top:67%;width:27%;height:25%;"  data-comp="datastores"      data-zoom="1.8" aria-label="Data Stores"></button>
+              <button class="hotspot" style="left:61%;top:15%;width:38%;height:10%;"  data-comp="externalGateway" data-zoom="2.2" aria-label="External Payment Gateway"></button>
+              <button class="hotspot" style="left:61%;top:52%;width:38%;height:18%;"  data-comp="secretsVault"    data-zoom="2.2" aria-label="Secrets Vault"></button>
             </div>
-
-            <div class="dfd-toolbar">
-              <div class="pill">Interactive DFD</div>
-              <div style="display: flex; gap: 12px; align-items: center;">
-                <span class="hint tiny">Tip: click components to zoom</span>
-                <button class="zoom-reset" id="zoomReset">Reset Zoom</button>
-              </div>
-            </div>
+          </div>
 
           <!-- Auth DFD -->
           <div class="dfd-view" id="dfd-auth">
@@ -222,13 +233,14 @@
               <p class="muted">Add your auth DFD image to <code>assets/dfd-auth.png</code>.</p>
             </div>
           </div>
-        </div>
+
+        </div><!-- /dfd-stage -->
 
         <!-- Side panel: component details -->
         <aside class="dfd-panel card" id="dfdPanel">
           <div class="dfd-panel-head">
             <h3 id="compTitle">Click a component</h3>
-            <div class="muted tiny" id="compMeta">Payment & Marketplace</div>
+            <div class="muted tiny" id="compMeta">Payment &amp; Marketplace</div>
           </div>
           <div id="compBody" class="dfd-panel-body">
             <p class="muted">
@@ -283,30 +295,30 @@
       <div class="card">
         <div class="table-wrap">
           <table class="table" id="threatTable">
-  <thead>
-    <tr>
-      <th>ID</th>
-      <th>Subsystem</th>
-      <th>Components Affected</th>
-      <th>Data Asset</th>
-      <th>Data Flow</th>
-      <th>S</th>
-      <th>T</th>
-      <th>R</th>
-      <th>I</th>
-      <th>D</th>
-      <th>E</th>
-      <th>Threat Name</th>
-      <th>Threat Description</th>
-      <th>Possible Impact</th>
-      <th>Likelihood Score</th>
-      <th>Impact Score</th>
-    </tr>
-  </thead>
-  <tbody>
-    <!-- injected by JS -->
-  </tbody>
-</table>
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Subsystem</th>
+                <th>Components Affected</th>
+                <th>Data Asset</th>
+                <th>Data Flow</th>
+                <th>S</th>
+                <th>T</th>
+                <th>R</th>
+                <th>I</th>
+                <th>D</th>
+                <th>E</th>
+                <th>Threat Name</th>
+                <th>Threat Description</th>
+                <th>Possible Impact</th>
+                <th>Likelihood Score</th>
+                <th>Impact Score</th>
+              </tr>
+            </thead>
+            <tbody>
+              <!-- injected by JS -->
+            </tbody>
+          </table>
         </div>
       </div>
     </section>
@@ -335,7 +347,7 @@
 
     <footer class="footer">
       <div class="muted tiny">
-        Built as an interactive report. Data seeded from your report draft :contentReference[oaicite:2]{index=2}
+        Built as an interactive report for TMC Global Threat Modeling Hackathon 2026 — Group 27.
       </div>
     </footer>
   </main>

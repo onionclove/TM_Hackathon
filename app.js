@@ -1,45 +1,38 @@
-// --- Smooth start transition ---
+// ─── Landing / topbar ────────────────────────────────────────────────────────
 const startBtn = document.getElementById("startBtn");
-const topbar = document.getElementById("topbar");
-const landing = document.getElementById("landing");
+const topbar   = document.getElementById("topbar");
+const landing  = document.getElementById("landing");
 
 startBtn?.addEventListener("click", () => {
-  // show nav and scroll into intro
   topbar.classList.add("show");
   document.querySelector("#intro")?.scrollIntoView({ behavior: "smooth" });
 });
 
 window.addEventListener("scroll", () => {
-  // Show topbar after leaving landing
-  const show = window.scrollY > (landing?.offsetHeight || 300) * 0.35;
-  if (show) topbar.classList.add("show");
+  if (window.scrollY > (landing?.offsetHeight || 300) * 0.35) {
+    topbar.classList.add("show");
+  }
 });
 
-// --- Tabs ---
+// ─── Tabs ────────────────────────────────────────────────────────────────────
 const tabs = Array.from(document.querySelectorAll(".tab"));
 const views = {
-  system: document.getElementById("dfd-system"),
-  media: document.getElementById("dfd-media"),
+  system:  document.getElementById("dfd-system"),
+  media:   document.getElementById("dfd-media"),
   payment: document.getElementById("dfd-payment"),
-  auth: document.getElementById("dfd-auth"),
+  auth:    document.getElementById("dfd-auth"),
 };
 
 tabs.forEach(btn => {
   btn.addEventListener("click", () => {
     tabs.forEach(t => t.classList.remove("active"));
     btn.classList.add("active");
-    const key = btn.dataset.tab;
-
     Object.values(views).forEach(v => v?.classList.remove("active"));
-    views[key]?.classList.add("active");
+    views[btn.dataset.tab]?.classList.add("active");
   });
 });
 
-// --- Component panel data (Payment DFD) ---
-const compTitle = document.getElementById("compTitle");
-const compMeta = document.getElementById("compMeta");
-const compBody = document.getElementById("compBody");
-
+// ─── Component info ───────────────────────────────────────────────────────────
 const componentInfo = {
   apiGateway: {
     title: "API Gateway (DMZ)",
@@ -47,72 +40,68 @@ const componentInfo = {
     responsibilities: [
       "Terminates TLS and enforces basic request controls",
       "Routes /checkout, /refund, and webhook callbacks",
-      "Reduces DoS exposure by rate limiting and filtering"
+      "Reduces DoS exposure by rate limiting and filtering",
     ],
     flows: [
       "Player → API Gateway: POST /checkout, POST /refund",
       "External Gateway → API Gateway: webhook callback (signed)",
       "API Gateway → Marketplace: validated request",
-      "API Gateway → Payment Adapter: forward webhook"
+      "API Gateway → Payment Adapter: forward webhook",
     ],
     assets: ["Auth tokens", "Order IDs", "Webhook events (integrity-critical)"],
-    topThreats: ["T-P01 Webhook Spoofing", "T-P06 Checkout DoS", "T-P07 Webhook Flood DoS"]
+    topThreats: ["T-P01 Webhook Spoofing", "T-P06 Checkout DoS", "T-P07 Webhook Flood DoS"],
   },
-
   marketplace: {
     title: "Marketplace Service (Internal)",
     meta: "Order lifecycle + state machine owner",
     responsibilities: [
       "Validates SKU/price via Product Catalog DB (server-side pricing)",
       "Creates PENDING orders and updates to PAID/REFUNDED based on verified events",
-      "Triggers entitlement grants only after PAID"
+      "Triggers entitlement grants only after PAID",
     ],
     flows: [
       "API Gateway → Marketplace: create order",
       "Marketplace → Purchase DB: insert/update order state",
       "Marketplace → Payment Adapter: create intent / refund initiation",
       "Marketplace → Entitlement Service: grant/revoke",
-      "Marketplace → Audit Log: append events"
+      "Marketplace → Audit Log: append events",
     ],
     assets: ["Order state integrity", "Pricing integrity", "Refund correctness"],
-    topThreats: ["T-P03 Client-side tampering (if pricing trusted)", "Race conditions / double-issue", "Refund abuse"]
+    topThreats: ["T-P03 Client-side tampering (if pricing trusted)", "Race conditions / double-issue", "Refund abuse"],
   },
-
   paymentAdapter: {
     title: "Payment Integration Adapter (Internal)",
     meta: "External payment interface + webhook verification",
     responsibilities: [
       "Creates payment intents/charges with external gateway",
       "Receives webhook callbacks via API Gateway and verifies signature",
-      "Returns verified payment outcome to Marketplace"
+      "Returns verified payment outcome to Marketplace",
     ],
     flows: [
       "Marketplace → Adapter: create payment intent",
       "Adapter → External Gateway: payment request",
       "External Gateway → API Gateway → Adapter: webhook (confirmed/failed)",
       "Adapter → Marketplace: verified payment result",
-      "Adapter → Secrets Vault: read API keys/webhook secrets"
+      "Adapter → Secrets Vault: read API keys/webhook secrets",
     ],
     assets: ["Webhook authenticity", "Provider txn IDs", "API keys (indirectly)"],
-    topThreats: ["T-P01 Webhook spoofing", "T-P02 Webhook replay", "Secret misuse"]
+    topThreats: ["T-P01 Webhook spoofing", "T-P02 Webhook replay", "Secret misuse"],
   },
-
   entitlement: {
     title: "Entitlement Service (Internal)",
     meta: "Inventory/virtual goods grants",
     responsibilities: [
       "Grants cosmetics/currency/boosts after PAID confirmation",
       "Writes inventory updates to Entitlement Store",
-      "Supports revocation/adjustments for refunds/chargebacks"
+      "Supports revocation/adjustments for refunds/chargebacks",
     ],
     flows: [
       "Marketplace → Entitlement Service: grant/revoke",
-      "Entitlement Service → Entitlement Store: inventory update"
+      "Entitlement Service → Entitlement Store: inventory update",
     ],
     assets: ["Entitlement integrity", "Player inventory correctness"],
-    topThreats: ["Unauthorized grants", "Double-issue", "Insufficient revocation"]
+    topThreats: ["Unauthorized grants", "Double-issue", "Insufficient revocation"],
   },
-
   datastores: {
     title: "Persistence & Logging Zone (Data Stores)",
     meta: "Orders, catalog, inventory, and audit evidence",
@@ -120,72 +109,64 @@ const componentInfo = {
       "Purchase DB stores order state transitions",
       "Catalog DB is pricing source of truth",
       "Entitlement Store holds player-owned items/currency",
-      "Audit Log preserves forensic integrity (append-only)"
+      "Audit Log preserves forensic integrity (append-only)",
     ],
     flows: [
       "Marketplace ↔ Purchase DB",
       "Marketplace/Entitlement → Entitlement Store",
-      "Marketplace → Audit Log"
+      "Marketplace → Audit Log",
     ],
     assets: ["Financial records", "Inventory integrity", "Non-repudiation evidence"],
-    topThreats: ["DB tampering", "Audit log deletion", "Broken authZ to read purchases"]
+    topThreats: ["DB tampering", "Audit log deletion", "Broken authZ to read purchases"],
   },
-
   externalGateway: {
     title: "External Payment Gateway (Out of control)",
     meta: "Third-party processor (Stripe/PayPal style)",
     responsibilities: [
       "Processes payment authorization and sends webhook events",
-      "Is not trusted by default—only trusted via signature verification"
+      "Is not trusted by default — only trusted via signature verification",
     ],
     flows: [
       "Adapter → Gateway: payment/refund initiation",
-      "Gateway → API Gateway: signed webhook callback"
+      "Gateway → API Gateway: signed webhook callback",
     ],
     assets: ["Provider transaction IDs", "Webhook event signatures"],
-    topThreats: ["Event spoofing if signatures not verified", "Availability dependence"]
+    topThreats: ["Event spoofing if signatures not verified", "Availability dependence"],
   },
-
   secretsVault: {
     title: "Secrets Vault (Separated zone)",
     meta: "API keys + webhook signing secrets",
     responsibilities: [
       "Stores API keys and webhook signing secrets",
-      "Enforces strict access control and audit"
+      "Enforces strict access control and audit",
     ],
     flows: [
-      "Payment Adapter → Secrets Vault: read API keys / webhook signing secrets"
+      "Payment Adapter → Secrets Vault: read API keys / webhook signing secrets",
     ],
     assets: ["API keys", "Webhook signing secret", "Encryption keys"],
-    topThreats: ["Secret compromise", "Over-permissive access", "No rotation"]
-  }
+    topThreats: ["Secret compromise", "Over-permissive access", "No rotation"],
+  },
 };
 
-function renderComp(compKey){
+// ─── Render component detail panel ───────────────────────────────────────────
+const compTitle = document.getElementById("compTitle");
+const compMeta  = document.getElementById("compMeta");
+const compBody  = document.getElementById("compBody");
+
+function renderComp(compKey) {
   const c = componentInfo[compKey];
   if (!c) return;
-
   compTitle.textContent = c.title;
-  compMeta.textContent = c.meta;
+  compMeta.textContent  = c.meta;
 
-  const list = (arr) => `<ul class="clean">${arr.map(x=>`<li>${x}</li>`).join("")}</ul>`;
+  const list = arr => `<ul class="clean">${arr.map(x => `<li>${x}</li>`).join("")}</ul>`;
   compBody.innerHTML = `
+    <div class="kv"><b>Responsibilities</b>${list(c.responsibilities)}</div>
+    <div class="kv"><b>Key Flows</b>${list(c.flows)}</div>
+    <div class="kv"><b>Data / Assets</b>${list(c.assets)}</div>
     <div class="kv">
-      <b>Responsibilities</b>
-      ${list(c.responsibilities)}
-    </div>
-    <div class="kv">
-      <b>Key Flows</b>
-      ${list(c.flows)}
-    </div>
-    <div class="kv">
-      <b>Data / Assets</b>
-      ${list(c.assets)}
-    </div>
-    <div class="kv">
-      <b>Top Threats</b>
-      ${list(c.topThreats)}
-      <button class="btn small" id="openThreatsFromComp">Open related threats</button>
+      <b>Top Threats</b>${list(c.topThreats)}
+      <button class="btn small" id="openThreatsFromComp">Open related threats ↓</button>
     </div>
   `;
 
@@ -196,115 +177,127 @@ function renderComp(compKey){
   });
 }
 
-// --- Zoom functionality for DFD hotspots ---
-const paymentDfdWrap = document.getElementById("paymentDfdWrap");
-const paymentDfdImg = document.getElementById("paymentDfdImg");
+// ─── DFD ZOOM — transform-origin approach ────────────────────────────────────
+//
+// HOW IT WORKS:
+//   Both the DFD image and its hotspot overlays sit inside .dfd-wrap,
+//   which has overflow:hidden.
+//
+//   When a hotspot is clicked we read its centre position as a % of the
+//   container (which equals the same % of the image since the image fills
+//   the container at scale:1).
+//
+//   We set  img.style.transformOrigin = "X% Y%"  so CSS scales the image
+//   *toward* that exact point, naturally bringing the component into view.
+//   No scroll arithmetic needed — the browser does the geometry for us.
+//
+//   Hotspots are NOT scaled themselves (they're siblings/children of the
+//   wrap, not of the img), so they stay visually in place and remain
+//   clickable while zoomed.
+// ─────────────────────────────────────────────────────────────────────────────
+
+const dfdWrap  = document.getElementById("paymentDfdWrap");
+const dfdImg   = document.getElementById("paymentDfdImg");
 const zoomReset = document.getElementById("zoomReset");
-let isZoomed = false;
+
+let activeHotspot = null;
 
 document.querySelectorAll(".hotspot").forEach(btn => {
   btn.addEventListener("click", () => {
     const comp = btn.dataset.comp;
-    
-    // First, show the component detail
+
+    // 1. Show component detail
     renderComp(comp);
+
+    // 2. Parse the hotspot's inline percentage coords
+    const s           = btn.getAttribute("style");
+    const left        = parseFloat(s.match(/left:([\d.]+)%/)?.[1]  ?? 0);
+    const top         = parseFloat(s.match(/top:([\d.]+)%/)?.[1]   ?? 0);
+    const width       = parseFloat(s.match(/width:([\d.]+)%/)?.[1] ?? 10);
+    const height      = parseFloat(s.match(/height:([\d.]+)%/)?.[1]?? 10);
+
+    // Centre of the hotspot in % terms
+    const cx = left + width  / 2;
+    const cy = top  + height / 2;
+
+    // 3. Read component-specific zoom level, default to 2.6
+    const zoomLevel = parseFloat(btn.dataset.zoom) || 2.6;
     
-    // Then zoom to the component
-    if (paymentDfdWrap && paymentDfdImg) {
-      // Extract percentage-based positioning from hotspot inline style
-      const style = btn.getAttribute("style");
-      const leftMatch = style.match(/left:(\d+(?:\.\d+)?)%/);
-      const topMatch = style.match(/top:(\d+(?:\.\d+)?)%/);
-      const widthMatch = style.match(/width:(\d+(?:\.\d+)?)%/);
-      const heightMatch = style.match(/height:(\d+(?:\.\d+)?)%/);
-      
-      const left = leftMatch ? parseFloat(leftMatch[1]) : 0;
-      const top = topMatch ? parseFloat(topMatch[1]) : 0;
-      const width = widthMatch ? parseFloat(widthMatch[1]) : 10;
-      const height = heightMatch ? parseFloat(heightMatch[1]) : 10;
-      
-      // Calculate center of component in percentage terms
-      const componentCenterX = left + width / 2;
-      const componentCenterY = top + height / 2;
-      
-      // Add zoom class
-      paymentDfdWrap.classList.add("zoomed");
-      isZoomed = {
-        x: componentCenterX,
-        y: componentCenterY,
-        comp: comp
-      };
-      
-      // Highlight the active hotspot
-      document.querySelectorAll(".hotspot").forEach(h => h.classList.remove("zoomed-active"));
-      btn.classList.add("zoomed-active");
-      
-      // Calculate scroll position based on zoomed image dimensions
-      setTimeout(() => {
-        const imgWidth = paymentDfdImg.scrollWidth;
-        const imgHeight = paymentDfdImg.scrollHeight;
-        
-        // Convert percentages to pixel coordinates in the scaled image
-        const componentPixelX = (componentCenterX / 100) * imgWidth;
-        const componentPixelY = (componentCenterY / 100) * imgHeight;
-        
-        // Scroll to center the component (accounting for the viewport size)
-        paymentDfdWrap.scrollLeft = componentPixelX - (paymentDfdWrap.clientWidth / 2);
-        paymentDfdWrap.scrollTop = componentPixelY - (paymentDfdWrap.clientHeight / 2);
-      }, 100);
-    }
+    // 3b. Set transform-origin on the IMAGE to that centre point,
+    //    then apply the dynamic zoom scale and add .zoomed to the wrap
+    dfdImg.style.transformOrigin = `${cx}% ${cy}%`;
+    dfdImg.style.transform = `scale(${zoomLevel})`;
+    dfdWrap.classList.add("zoomed");
+
+    // 4. Track active hotspot for visual highlight (but don't show it)
+    if (activeHotspot) activeHotspot.classList.remove("active");
+    btn.classList.add("active");
+    activeHotspot = btn;
+
+    // 5a. Hide ALL hotspots when zoomed to prevent view obstruction
+    document.querySelectorAll(".hotspot").forEach(hs => {
+      hs.classList.add("hidden");
+    });
+
+    // 5c. Show reset button
+    zoomReset.style.display = "inline-block";
   });
 });
 
-// Reset zoom button
-zoomReset?.addEventListener("click", (e) => {
-  e.stopPropagation();
-  paymentDfdWrap?.classList.remove("zoomed");
-  document.querySelectorAll(".hotspot").forEach(h => h.classList.remove("zoomed-active"));
-  isZoomed = false;
-});
-
-// Double-click on wrap to reset zoom
-paymentDfdWrap?.addEventListener("dblclick", () => {
-  if (isZoomed) {
-    paymentDfdWrap.classList.remove("zoomed");
-    document.querySelectorAll(".hotspot").forEach(h => h.classList.remove("zoomed-active"));
-    isZoomed = false;
+function resetZoom() {
+  dfdWrap.classList.remove("zoomed");
+  dfdImg.style.transformOrigin = "center center";
+  dfdImg.style.transform = "scale(1)";
+  if (activeHotspot) {
+    activeHotspot.classList.remove("active");
+    activeHotspot = null;
   }
+  // 5b. Show all hotspots again
+  document.querySelectorAll(".hotspot").forEach(hs => {
+    hs.classList.remove("hidden");
+  });
+  zoomReset.style.display = "none";
+}
+
+zoomReset?.addEventListener("click", resetZoom);
+
+// Double-click wrap background to reset
+dfdWrap?.addEventListener("dblclick", e => {
+  if (!e.target.classList.contains("hotspot")) resetZoom();
 });
 
-// --- Assumptions table (seed with your draft; editable later) ---
+// ─── Assumptions table ────────────────────────────────────────────────────────
 const assumptions = [
   {
     a: "Webhook events are signed and verified server-side",
     r: "Architecture depends on webhooks for payment truth",
     i: "If not verified → spoofed payment/refund events",
-    v: "Show signature verification logic + provider docs"
+    v: "Show signature verification logic + provider docs",
   },
   {
     a: "Server-side pricing is authoritative (Catalog DB)",
     r: "Clients can tamper with request bodies",
     i: "If trusted → underpriced purchases",
-    v: "Confirm marketplace ignores client price"
+    v: "Confirm marketplace ignores client price",
   },
   {
     a: "Entitlements are granted only after PAID state",
     r: "Prevents client-side payment confirmation abuse",
     i: "Prevents free item grants",
-    v: "Show state machine + entitlement gating code"
-  }
+    v: "Show state machine + entitlement gating code",
+  },
 ];
 
-const assumptionsTable = document.querySelector("#assumptionsTable tbody");
-if (assumptionsTable){
-  assumptionsTable.innerHTML = assumptions.map(x=>`
+const assumptionsBody = document.querySelector("#assumptionsTable tbody");
+if (assumptionsBody) {
+  assumptionsBody.innerHTML = assumptions.map(x => `
     <tr>
       <td>${x.a}</td><td>${x.r}</td><td>${x.i}</td><td>${x.v}</td>
     </tr>
   `).join("");
 }
 
-// --- Threat table data (seeded from your draft doc for payment) ---
+// ─── Threat data ──────────────────────────────────────────────────────────────
 const threats = [
   {
     id: "T-P01",
@@ -317,7 +310,7 @@ const threats = [
     threatDescription: "Attacker sends a forged webhook event to mark an order as PAID and trigger entitlement issuance without a real payment.",
     possibleImpact: "Free entitlements, revenue loss, fraud scaling",
     likelihoodScore: 4,
-    impactScore: 5
+    impactScore: 5,
   },
   {
     id: "T-P02",
@@ -330,7 +323,7 @@ const threats = [
     threatDescription: "A valid webhook event is replayed to duplicate processing and re-grant entitlements if idempotency/state checks are weak.",
     possibleImpact: "Duplicate inventory/currency grants, accounting inconsistencies",
     likelihoodScore: 3,
-    impactScore: 4
+    impactScore: 4,
   },
   {
     id: "T-P03",
@@ -343,66 +336,43 @@ const threats = [
     threatDescription: "Client tampers with item/price fields to buy goods cheaper unless server validates price using the catalog source of truth.",
     possibleImpact: "Undervalued purchases, marketplace abuse, financial loss",
     likelihoodScore: 4,
-    impactScore: 4
-  }
+    impactScore: 4,
+  },
 ];
 
-// --- Table rendering + filtering ---
-const strideFilter = document.getElementById("strideFilter");
-const riskFilter = document.getElementById("riskFilter");
-const searchThreats = document.getElementById("searchThreats");
-const threatTableBody = document.querySelector("#threatTable tbody");
-const threatDetail = document.getElementById("threatDetail");
+// ─── Threat table ─────────────────────────────────────────────────────────────
+const strideFilter     = document.getElementById("strideFilter");
+const riskFilter       = document.getElementById("riskFilter");
+const searchThreats    = document.getElementById("searchThreats");
+const threatTableBody  = document.querySelector("#threatTable tbody");
+const threatDetail     = document.getElementById("threatDetail");
 
-function riskTag(r){
-  const cls = r === "CRITICAL" ? "crit" : r === "HIGH" ? "high" : r === "MED" ? "med" : "low";
-  return `<span class="tag ${cls}">${r}</span>`;
-}
-
-function strideName(s){
-  return ({S:"Spoofing",T:"Tampering",R:"Repudiation",I:"Info Disclosure",D:"DoS",E:"EoP"})[s] || s;
-}
-
-function xmark(on){ return on ? "X" : ""; }
-
-// Calculate risk score (1-25) and get risk category
-function getRiskLevel(riskScore) {
-  if (riskScore <= 4) return "Acceptable";
-  if (riskScore <= 9) return "Adequate";
-  if (riskScore <= 16) return "Tolerable";
+function getRiskLevel(score) {
+  if (score <= 4)  return "Acceptable";
+  if (score <= 9)  return "Adequate";
+  if (score <= 16) return "Tolerable";
   return "Unacceptable";
 }
 
-function refreshThreatTable(){
-  const q = (searchThreats.value || "").trim().toLowerCase();
-  const strideFilterVal = strideFilter.value;
-  const riskLevelFilter = riskFilter.value;
+function xmark(on) { return on ? "✗" : "" }
+
+function refreshThreatTable() {
+  const q              = (searchThreats.value || "").trim().toLowerCase();
+  const strideVal      = strideFilter.value;
+  const riskLevelVal   = riskFilter.value;
 
   const rows = threats.filter(t => {
-    const okQ = !q || (
-      t.id.toLowerCase().includes(q) ||
-      t.subsystem.toLowerCase().includes(q) ||
-      t.componentsAffected.toLowerCase().includes(q) ||
-      t.dataAsset.toLowerCase().includes(q) ||
-      t.dataFlow.toLowerCase().includes(q) ||
-      t.threatName.toLowerCase().includes(q) ||
-      t.threatDescription.toLowerCase().includes(q) ||
-      t.possibleImpact.toLowerCase().includes(q)
-    );
-    
-    const okStride = (strideFilterVal === "ALL") || t.stride[strideFilterVal];
-    
-    const threatScore = t.likelihoodScore * t.impactScore;
-    const threatRiskLevel = getRiskLevel(threatScore);
-    const okRisk = (riskLevelFilter === "ALL") || (threatRiskLevel === riskLevelFilter);
-    
+    const okQ = !q || [
+      t.id, t.subsystem, t.componentsAffected, t.dataAsset,
+      t.dataFlow, t.threatName, t.threatDescription, t.possibleImpact,
+    ].some(f => f.toLowerCase().includes(q));
+
+    const okStride    = strideVal    === "ALL" || t.stride[strideVal];
+    const okRisk      = riskLevelVal === "ALL" || getRiskLevel(t.likelihoodScore * t.impactScore) === riskLevelVal;
     return okQ && okStride && okRisk;
   });
 
-  threatTableBody.innerHTML = rows.map(t => {
-    const riskScore = t.likelihoodScore * t.impactScore;
-    const riskLevel = getRiskLevel(riskScore);
-    return `
+  threatTableBody.innerHTML = rows.map(t => `
     <tr data-id="${t.id}">
       <td><b>${t.id}</b></td>
       <td>${t.subsystem}</td>
@@ -421,32 +391,32 @@ function refreshThreatTable(){
       <td>${t.likelihoodScore}</td>
       <td>${t.impactScore}</td>
     </tr>
-    `;
-  }).join("");
+  `).join("");
 
   threatTableBody.querySelectorAll("tr").forEach(tr => {
     tr.addEventListener("click", () => showThreat(tr.dataset.id));
   });
 }
 
-function showThreat(id){
+function showThreat(id) {
   const t = threats.find(x => x.id === id);
   if (!t) return;
-  
-  const riskScore = t.likelihoodScore * t.impactScore;
-  const riskLevel = getRiskLevel(riskScore);
-
+  const score = t.likelihoodScore * t.impactScore;
   threatDetail.innerHTML = `
     <div class="kv">
       <b>${t.id} — ${t.threatName}</b>
       <div class="muted tiny">${t.subsystem}</div>
-      <p style="margin:8px 0"><b>Risk Score:</b> <span style="color:var(--accent);font-weight:900;font-size:18px;">${riskScore}</span> (${riskLevel}) | L: ${t.likelihoodScore} × I: ${t.impactScore}</p>
+      <p style="margin:8px 0">
+        <b>Risk Score:</b>
+        <span style="color:var(--accent);font-weight:900;font-size:18px;">${score}</span>
+        (${getRiskLevel(score)}) | L: ${t.likelihoodScore} × I: ${t.impactScore}
+      </p>
       <p><b>Components:</b> ${t.componentsAffected}</p>
       <p><b>Data Asset:</b> ${t.dataAsset}</p>
       <p><b>Data Flow:</b> ${t.dataFlow}</p>
       <p><b>STRIDE:</b>
-        ${t.stride.S ? "S " : ""}${t.stride.T ? "T " : ""}${t.stride.R ? "R " : ""}
-        ${t.stride.I ? "I " : ""}${t.stride.D ? "D " : ""}${t.stride.E ? "E" : ""}
+        ${t.stride.S?"S ":""}${t.stride.T?"T ":""}${t.stride.R?"R ":""}
+        ${t.stride.I?"I ":""}${t.stride.D?"D ":""}${t.stride.E?"E":""}
       </p>
       <p><b>Description:</b> ${t.threatDescription}</p>
       <p><b>Possible Impact:</b> ${t.possibleImpact}</p>
@@ -458,113 +428,90 @@ function showThreat(id){
 searchThreats.addEventListener("input", refreshThreatTable);
 refreshThreatTable();
 
-// --- Risk matrix (5x5 with numeric scoring) ---
-const matrix = document.getElementById("riskMatrix");
+// ─── Risk Matrix ──────────────────────────────────────────────────────────────
+const matrix       = document.getElementById("riskMatrix");
 const matrixDetail = document.getElementById("matrixDetail");
 
-// 5 likelihood levels (columns): 1=Rare, 2=Unlikely, 3=Moderate, 4=Likely, 5=Almost Certain
 const likelihoodLevels = [
-  { score: 1, label: "Rare" },
-  { score: 2, label: "Unlikely" },
-  { score: 3, label: "Moderate" },
-  { score: 4, label: "Likely" },
-  { score: 5, label: "Almost Certain" }
+  { score:1, label:"Rare" },
+  { score:2, label:"Unlikely" },
+  { score:3, label:"Moderate" },
+  { score:4, label:"Likely" },
+  { score:5, label:"Almost Certain" },
 ];
-
-// 5 impact levels (rows): 1=Insignificant, 2=Minor, 3=Significant, 4=Major, 5=Severe
 const impactLevels = [
-  { score: 5, label: "Severe" },
-  { score: 4, label: "Major" },
-  { score: 3, label: "Significant" },
-  { score: 2, label: "Minor" },
-  { score: 1, label: "Insignificant" }
+  { score:5, label:"Severe" },
+  { score:4, label:"Major" },
+  { score:3, label:"Significant" },
+  { score:2, label:"Minor" },
+  { score:1, label:"Insignificant" },
 ];
 
-function buildMatrix(){
+function el(tag, cls, html) {
+  const d = document.createElement(tag);
+  d.className = cls;
+  d.innerHTML = html;
+  return d;
+}
+
+function buildMatrix() {
   if (!matrix) return;
   matrix.innerHTML = "";
-
-  // Header row
   matrix.appendChild(el("div","mhead","Impact \\ Likelihood"));
-  likelihoodLevels.forEach(l => matrix.appendChild(el("div","mhead",`${l.score}<div style="font-size:10px;font-weight:normal">${l.label}</div>`)));
+  likelihoodLevels.forEach(l =>
+    matrix.appendChild(el("div","mhead",`${l.score}<div style="font-size:10px;font-weight:normal">${l.label}</div>`))
+  );
 
-  // Data rows (impact highest to lowest)
   impactLevels.forEach(impact => {
-    const impactHeader = el("div","mhead",`${impact.score}<div style="font-size:10px;font-weight:normal">${impact.label}</div>`);
-    matrix.appendChild(impactHeader);
-    
+    matrix.appendChild(el("div","mhead",`${impact.score}<div style="font-size:10px;font-weight:normal">${impact.label}</div>`));
     likelihoodLevels.forEach(likelihood => {
-      const riskScore = impact.score * likelihood.score;
-      const riskLevel = getRiskLevel(riskScore);
-      
-      const cell = el("div","mcell",`${riskScore}`);
-      cell.dataset.score = riskScore;
-      cell.dataset.impact = impact.score;
-      cell.dataset.likelihood = likelihood.score;
-      cell.dataset.riskLevel = riskLevel;
-      cell.title = `Impact: ${impact.score} × Likelihood: ${likelihood.score} = ${riskScore} (${riskLevel})`;
-
+      const score = impact.score * likelihood.score;
+      const cell  = el("div","mcell",`${score}`);
+      cell.dataset.score      = score;
+      cell.dataset.riskLevel  = getRiskLevel(score);
+      cell.title = `Impact ${impact.score} × Likelihood ${likelihood.score} = ${score} (${getRiskLevel(score)})`;
       cell.addEventListener("click", () => {
         document.querySelectorAll(".mcell").forEach(x => x.classList.remove("active"));
         cell.classList.add("active");
-        showBand(riskScore);
+        showBand(score);
       });
-
       matrix.appendChild(cell);
     });
   });
 }
 
-function showBand(riskScore){
-  const riskLevel = getRiskLevel(riskScore);
-  const matches = threats.filter(t => {
-    const threatScore = t.likelihoodScore * t.impactScore;
-    return threatScore === riskScore;
-  });
-  
+function showBand(riskScore) {
+  const matches = threats.filter(t => t.likelihoodScore * t.impactScore === riskScore);
   matrixDetail.innerHTML = `
     <div class="kv">
-      <b>Risk Score: ${riskScore} (${riskLevel})</b>
+      <b>Risk Score: ${riskScore} (${getRiskLevel(riskScore)})</b>
       <div class="muted tiny">${matches.length} threat(s)</div>
       <ul class="clean">
-        ${matches.map(t => `<li><b>${t.id}</b> — ${t.threatName} (L:${t.likelihoodScore} × I:${t.impactScore})</li>`).join("") || "<li class='muted'>No threats with this exact score.</li>"}
+        ${matches.map(t => `<li><b>${t.id}</b> — ${t.threatName} (L:${t.likelihoodScore} × I:${t.impactScore})</li>`).join("")
+          || "<li class='muted'>No threats with this exact score.</li>"}
       </ul>
     </div>
   `;
-  
-  // Optional: filter table to threats with same or similar risk level
-  // This is just for reference; you can adjust filtering as needed
-}
-
-function el(tag, cls, text){
-  const d = document.createElement(tag);
-  d.className = cls;
-  d.innerHTML = text;
-  return d;
 }
 
 buildMatrix();
 
-// --- Modal helpers ---
-const modal = document.getElementById("modal");
+// ─── Modal helpers ────────────────────────────────────────────────────────────
+const modal      = document.getElementById("modal");
 const modalTitle = document.getElementById("modalTitle");
-const modalBody = document.getElementById("modalBody");
+const modalBody  = document.getElementById("modalBody");
 const modalClose = document.getElementById("modalClose");
 
-function openModal(title, html){
+function openModal(title, html) {
   modalTitle.textContent = title;
-  modalBody.innerHTML = html;
+  modalBody.innerHTML    = html;
   modal.classList.add("show");
   modal.setAttribute("aria-hidden","false");
 }
-function closeModal(){
+function closeModal() {
   modal.classList.remove("show");
   modal.setAttribute("aria-hidden","true");
 }
 modalClose?.addEventListener("click", closeModal);
-modal?.addEventListener("click", (e) => {
-  if (e.target === modal) closeModal();
-});
-document.addEventListener("keydown", (e) => {
-  if (e.key === "Escape") closeModal();
-});
+modal?.addEventListener("click", e => { if (e.target === modal) closeModal() });
+document.addEventListener("keydown", e => { if (e.key === "Escape") closeModal() });
