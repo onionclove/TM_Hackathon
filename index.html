@@ -34,8 +34,8 @@
         <ul class="toc-list">
           <li><a href="#intro" class="toc-link">1. Introduction</a></li>
           <li><a href="#overview" class="toc-link">2. System Overview</a></li>
-          <li><a href="#dfds" class="toc-link">3. Data Flow Diagrams</a></li>
-          <li><a href="#risk" class="toc-link">4. Risk Matrix</a></li>
+          <li><a href="#risk" class="toc-link">3. Risk Matrix</a></li>
+          <li><a href="#dfds" class="toc-link">4. Data Flow Diagrams</a></li>
           <li><a href="#threats" class="toc-link">5. Threat Modelling</a></li>
           <li><a href="#remediations" class="toc-link">6. Remediations & Mitigations</a></li>
         </ul>
@@ -317,9 +317,35 @@
 
           <!-- Auth DFD -->
           <div class="dfd-view" id="dfd-auth">
-            <div class="card">
-              <h3>Auth DFD</h3>
-              <p class="muted">Add your auth DFD image to <code>assets/dfd-auth.png</code>.</p>
+
+            <div class="dfd-toolbar">
+              <div class="pill">Interactive DFD</div>
+              <div style="display:flex;gap:12px;align-items:center;">
+                <span class="hint tiny">Tip: click components to zoom in</span>
+                <button class="zoom-reset" id="authZoomReset">Reset Zoom</button>
+              </div>
+            </div>
+
+            <div class="dfd-wrap" id="authDfdWrap">
+              <img
+                src="assets/dfd-authentication.svg"
+                alt="Authentication &amp; Identity DFD"
+                class="dfd-img"
+                id="authDfdImg"
+              />
+
+              <!-- Hotspots calculated from SVG dimensions 1950×1200 -->
+              <button class="hotspot" style="left:16%;top:20%;width:8%;height:12%;"   data-comp="authApiGateway"     data-zoom="2.8" aria-label="API Gateway"></button>
+              <button class="hotspot" style="left:34%;top:17%;width:10%;height:17%;"  data-comp="authService"        data-zoom="2.4" aria-label="Auth Service"></button>
+              <button class="hotspot" style="left:51%;top:9%;width:7%;height:11%;"    data-comp="authEmailWorker"    data-zoom="2.8" aria-label="Email Worker"></button>
+              <button class="hotspot" style="left:52%;top:23%;width:7%;height:10%;"   data-comp="authMfaService"     data-zoom="2.8" aria-label="MFA Verification"></button>
+              <button class="hotspot" style="left:29%;top:42%;width:7%;height:10%;"   data-comp="authUserProfile"    data-zoom="2.8" aria-label="User Profile Service"></button>
+              <button class="hotspot" style="left:42%;top:47%;width:6%;height:10%;"   data-comp="authBotRiskEngine"  data-zoom="2.8" aria-label="Bot / Risk Engine"></button>
+              <button class="hotspot" style="left:53%;top:46%;width:7%;height:11%;"   data-comp="authPolicyService"  data-zoom="2.8" aria-label="Parental Consent / Policy Service"></button>
+              <button class="hotspot" style="left:14%;top:62%;width:53%;height:29%;"  data-comp="authDatastores"     data-zoom="1.8" aria-label="Data Stores"></button>
+              <button class="hotspot" style="left:68%;top:7%;width:30%;height:13%;"   data-comp="authExtEmail"       data-zoom="2.2" aria-label="External Email Provider"></button>
+              <button class="hotspot" style="left:68%;top:22%;width:30%;height:14%;"  data-comp="authExtMfa"         data-zoom="2.2" aria-label="External MFA / SMS Provider"></button>
+              <button class="hotspot" style="left:68%;top:45%;width:30%;height:14%;"  data-comp="authSecretsVault"   data-zoom="2.2" aria-label="Secrets Vault"></button>
             </div>
           </div>
 

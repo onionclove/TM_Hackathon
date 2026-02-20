@@ -110,6 +110,7 @@ code { font-family: var(--mono); font-size: .95em }
 
 /* ── Grid ── */
 .grid { display: grid; gap: 24px }
+.grid > * { min-width: 0 } /* prevent grid blowout */
 .grid.two { grid-template-columns: 1fr }
 @media (min-width: 900px) {
   .grid.two { grid-template-columns: 1fr 1fr }
@@ -475,6 +476,9 @@ code { font-family: var(--mono); font-size: .95em }
 .details { margin-top: 10px }
 .details summary { cursor: pointer; color: var(--text); font-weight: 800; padding: 8px 0; transition: color .2s ease }
 .details summary:hover { color: var(--accent) }
+/* assumptions table sits inside a half-width card — let it scroll instead of breaking out */
+.details .table-wrap { width: 100%; overflow-x: auto }
+#assumptionsTable { min-width: 600px }
 
 /* ── Risk Matrix ── */
 .matrix {

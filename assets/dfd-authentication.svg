@@ -1,0 +1,180 @@
+<svg width="1949.9999999999998" height="1200" xmlns="http://www.w3.org/2000/svg" version="1.1">
+ <defs>
+  <marker id="arrowW" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto" markerUnits="strokeWidth">
+   <path d="m0,0l8,3l-8,3l0,-6z" class="marker" fill="#EEEEEE" id="svg_1"/>
+  </marker>
+  <marker id="arrowO" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto" markerUnits="strokeWidth">
+   <path d="m0,0l8,3l-8,3l0,-6z" class="marker-o" fill="#FF8C00" id="svg_2"/>
+  </marker>
+ </defs>
+ <!-- Zones -->
+ <!-- Entities -->
+ <!-- Components (non-overlapping) -->
+ <!-- Stores -->
+ <!-- External provider blocks -->
+ <!-- LEFT side: split lanes, no cross near Player/API -->
+ <!-- Gateway/Auth pair -->
+ <!-- Service lines -->
+ <!-- Risk and policy -->
+ <!-- Bottom vertical lanes (well-spaced): x=700,790,880,970 -->
+ <!-- Policy <-> user db corridor away from store labels -->
+ <!-- Right-side external lines split into clean bands -->
+ <!-- Compact callouts placed BESIDE lines, not on top -->
+ <!-- Markers in free space -->
+ <g>
+  <title>Layer 1</title>
+  <path id="svg_3" d="m-1,-0.38462l1950,0l0,1200l-1950,0l0,-1200z" opacity="undefined" fill="#141414"/>
+  <text x="975" y="38" text-anchor="middle" class="label" font-size="22" font-weight="bold" font-family="ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif" fill="#EEEEEE" id="svg_4">DFD: Authentication and Identity</text>
+  <text x="975" y="58" text-anchor="middle" class="label-muted" font-size="10" font-family="ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif" fill="#989898" id="svg_5">TMC Global Threat Modeling Hackathon 2026 | Focus Area 3</text>
+  <rect x="30" y="111" width="220" height="700" fill="none" stroke="#CC2222" stroke-width="2" stroke-dasharray="8 5" id="svg_6"/>
+  <text x="28" y="94" class="label-red" font-size="8" font-weight="bold" font-family="ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif" fill="#FF6666" id="svg_7">The Internet (Untrusted)</text>
+  <rect x="262" y="99" width="260" height="450" fill="none" stroke="#CC2222" stroke-width="2" stroke-dasharray="8 5" id="svg_8"/>
+  <text x="268" y="116" class="label-red" font-size="8" font-weight="bold" font-family="ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif" fill="#FF6666" id="svg_9">Network DMZ</text>
+  <text x="548" y="94" class="label-red" font-size="8" font-weight="bold" font-family="ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif" fill="#FF6666" id="svg_11">Internal Services Zone</text>
+  <path stroke="#CC2222" id="svg_12" d="m265.61538,741.46154l1040,0l0,344.61536l-1040,0l0,-344.61536z" opacity="undefined" stroke-dasharray="8 5" stroke-width="2" fill="none"/>
+  <text x="268" y="756" class="label-red" font-size="8" font-weight="bold" font-family="ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif" fill="#FF6666" id="svg_13">Data Store Zone</text>
+  <rect stroke="#FF8C00" x="1327.69229" y="78" width="592.30771" height="160.76923" fill="none" stroke-width="1.8" stroke-dasharray="8 5" id="svg_14"/>
+  <text transform="matrix(1.06289 0 0 1.5784 -94.971 -61.0276)" stroke="null" x="1351.79606" y="104.20546" class="label-orange" font-size="8" font-weight="bold" font-family="ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif" fill="#FF9A3C" id="svg_15">External Email Provider Zone (Out of Control)</text>
+  <rect stroke="#FF8C00" x="1327.69231" y="260" width="587.69231" height="166.92308" fill="none" stroke-width="1.8" stroke-dasharray="8 5" id="svg_16"/>
+  <text style="cursor: move;" transform="matrix(1.03903 0 0 1.85893 -60.0701 -251.908)" stroke="null" x="1344.80748" y="290.55701" class="label-orange" font-size="8" font-weight="bold" font-family="ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif" fill="#FF9A3C" id="svg_17">External MFA or SMS Provider Zone (Out of Control)</text>
+  <rect stroke="#FF8C00" x="1329.23077" y="538.92308" width="587.69231" height="170" fill="none" stroke-width="1.8" stroke-dasharray="8 5" id="svg_18"/>
+  <text transform="matrix(1.17582 0 0 2.01768 -235.382 -558.996)" stroke="null" x="1338.76923" y="558" class="label-orange" font-size="8" font-weight="bold" font-family="ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif" fill="#FF9A3C" id="svg_19">Secrets Vault Zone</text>
+  <rect x="40" y="180" width="180" height="60" class="node" fill="#0c0c0c" stroke="#EEEEEE" stroke-width="1.7" id="svg_20"/>
+  <text x="130" y="214" text-anchor="middle" class="label" font-size="12" font-weight="bold" font-family="ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif" fill="#EEEEEE" id="svg_21">Player</text>
+  <rect x="40" y="580" width="180" height="60" class="node" fill="#0c0c0c" stroke="#EEEEEE" stroke-width="1.7" id="svg_22"/>
+  <text x="130" y="607" text-anchor="middle" class="label" font-size="11" font-weight="bold" font-family="ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif" fill="#EEEEEE" id="svg_23">Admin or Support</text>
+  <text x="130" y="622" text-anchor="middle" class="label-muted" font-size="8" font-family="ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif" fill="#989898" id="svg_24">Internal Staff</text>
+  <ellipse cx="390" cy="320" rx="74" ry="74" class="node" fill="#0c0c0c" stroke="#EEEEEE" stroke-width="1.7" id="svg_25"/>
+  <text x="390" y="314" text-anchor="middle" class="label" font-size="13" font-weight="bold" font-family="ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif" fill="#EEEEEE" id="svg_26">API Gateway</text>
+  <text x="390" y="332" text-anchor="middle" class="label-muted" font-size="9" font-family="ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif" fill="#989898" id="svg_27">TLS, rate limits, routing</text>
+  <ellipse cx="760" cy="300" rx="100" ry="100" class="node" fill="#0c0c0c" stroke="#EEEEEE" stroke-width="1.7" id="svg_28"/>
+  <text x="760" y="292" text-anchor="middle" class="label" font-size="14" font-weight="bold" font-family="ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif" fill="#EEEEEE" id="svg_29">Auth Service</text>
+  <text x="763.07692" y="315.07692" text-anchor="middle" class="label-muted" font-size="9" font-family="ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif" fill="#989898" id="svg_30">Identity orchestration core</text>
+  <ellipse cx="1063.07692" cy="171.07692" rx="64" ry="64" class="node" fill="#0c0c0c" stroke="#EEEEEE" stroke-width="1.7" id="svg_31"/>
+  <text x="1060" y="164" text-anchor="middle" class="label" font-size="10" font-weight="bold" font-family="ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif" fill="#EEEEEE" id="svg_32">Email Worker</text>
+  <text x="1060" y="182" text-anchor="middle" class="label-muted" font-size="9" font-family="ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif" fill="#989898" id="svg_33">Async dispatcher</text>
+  <ellipse stroke="#EEEEEE" cx="1078.46153" cy="335.38463" rx="65.38462" ry="61.53846" class="node" fill="#0c0c0c" stroke-width="1.7" id="svg_34"/>
+  <text x="1076.92307" y="333.23078" text-anchor="middle" class="label" font-size="10" font-weight="bold" font-family="ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif" fill="#EEEEEE" id="svg_35">MFA Verification</text>
+  <text x="1078.46154" y="351.23078" text-anchor="middle" class="label-muted" font-size="9" font-family="ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif" fill="#989898" id="svg_36">TOTP and SMS checks</text>
+  <ellipse stroke="#EEEEEE" cx="627.38461" cy="566.30769" rx="65.23077" ry="57.53846" class="node" fill="#0c0c0c" stroke-width="1.7" id="svg_37"/>
+  <text x="622" y="555" text-anchor="middle" class="label" font-size="10" font-weight="bold" font-family="ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif" fill="#EEEEEE" id="svg_38">User Profile Service</text>
+  <text x="621" y="575" text-anchor="middle" class="label-muted" font-size="9" font-family="ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif" fill="#989898" id="svg_39">Profile and privacy</text>
+  <path id="svg_40" d="m881.69235,624.38459c-32.0442,0 -58,-25.9558 -58,-58c0,-32.0442 25.9558,-58 58,-58c32.0442,0 58,25.9558 58,58c0,32.0442 -25.9558,58 -58,58z" opacity="undefined" stroke-width="1.7" stroke="#EEEEEE" fill="#0c0c0c"/>
+  <text style="cursor: move;" x="883.23081" y="555.46151" text-anchor="middle" class="label" font-size="10" font-weight="bold" font-family="ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif" fill="#EEEEEE" id="svg_41">Bot or Risk Engine</text>
+  <text x="884.38466" y="573.46151" text-anchor="middle" class="label-muted" font-size="9" font-family="ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif" fill="#989898" id="svg_42">Anomaly and challenge</text>
+  <path id="svg_46" d="m337.46155,838.69232l560,0l0,50l-560,0l0,-50z" opacity="undefined" stroke-width="1.35" stroke="#EEEEEE" fill="#0c0c0c"/>
+  <text x="597.53846" y="868.23076" text-anchor="middle" class="label" font-size="10" font-family="ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif" fill="#EEEEEE" id="svg_49">
+   <tspan font-weight="bold" id="svg_50">Auth DB</tspan>(hashed passwords, MFA seeds, account state)</text>
+  <path id="svg_51" d="m332,930.30769l560,0l0,50l-560,0l0,-50z" opacity="undefined" stroke-width="1.35" stroke="#EEEEEE" fill="#0c0c0c"/>
+  <text x="618" y="958.76922" text-anchor="middle" class="label" font-size="10" font-family="ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif" fill="#EEEEEE" id="svg_59">Session or Token Store (jti, refresh family, revocation state)</text>
+  <rect x="336.53846" y="1009.15383" width="560" height="50" class="store" fill="#0c0c0c" stroke="#EEEEEE" stroke-width="1.35" id="svg_61"/>
+  <path id="svg_62" d="m900,974" opacity="undefined" stroke-width="2" stroke="#EEEEEE"/>
+  <text x="620.46154" y="1034.61538" text-anchor="middle" class="label" font-size="10" font-family="ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif" fill="#EEEEEE" id="svg_64">
+   <tspan font-weight="bold" id="svg_65">Audit Log</tspan>(append-only auth events)</text>
+  <rect x="1370" y="118" width="500" height="84" class="node-ext" fill="#0c0c0c" stroke="#FF8C00" stroke-width="1.6" id="svg_66"/>
+  <text x="1620" y="165" text-anchor="middle" class="label-orange" font-size="11" font-weight="bold" font-family="ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif" fill="#FF9A3C" id="svg_67">External Email Provider</text>
+  <rect stroke="#FF8C00" x="1385.38462" y="313.07693" width="384.61539" height="84" class="node-ext" fill="#0c0c0c" stroke-width="1.6" id="svg_68"/>
+  <text x="1592.3077" y="361.61539" text-anchor="middle" class="label-orange" font-size="11" font-weight="bold" font-family="ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif" fill="#FF9A3C" id="svg_69">External MFA or SMS Provider</text>
+  <rect x="1368.46154" y="593.84615" width="500" height="84" class="node-ext" fill="#0c0c0c" stroke="#FF8C00" stroke-width="1.6" id="svg_70"/>
+  <text x="1610.76923" y="640.92307" text-anchor="middle" class="label" font-size="12" font-weight="bold" font-family="ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif" fill="#ff7f00" id="svg_71">Secrets Vault</text>
+  <path d="m221,196l80,0l0,56l16,0" class="flow-crit" marker-end="url(#arrowW)" fill="none" stroke="#EEEEEE" stroke-width="1.85" id="svg_72"/>
+  <path d="m316,368l-32,0l0,-130l-64,0" class="flow" marker-end="url(#arrowW)" fill="none" stroke="#EEEEEE" stroke-width="1.45" id="svg_73"/>
+  <path d="m220,610l88,0l0,-220l42,0" class="flow" marker-end="url(#arrowW)" fill="none" stroke="#EEEEEE" stroke-width="1.45" id="svg_74"/>
+  <path d="m464,284l196,0" class="flow-crit" marker-end="url(#arrowW)" fill="none" stroke="#EEEEEE" stroke-width="1.85" id="svg_75"/>
+  <path d="m660,334l-196,0" class="flow-crit" marker-end="url(#arrowW)" fill="none" stroke="#EEEEEE" stroke-width="1.85" id="svg_76"/>
+  <path d="m842,224l154,-44" class="flow-async" marker-end="url(#arrowW)" fill="none" stroke="#EEEEEE" stroke-width="1.3" stroke-dasharray="6 4" id="svg_77"/>
+  <path d="m870.76923,314.92308l130,0" class="flow" marker-end="url(#arrowW)" fill="none" stroke="#EEEEEE" stroke-width="1.45" id="svg_78"/>
+  <path stroke="#EEEEEE" d="m996.15385,336.46154l-130,0" class="flow" marker-end="url(#arrowW)" fill="none" stroke-width="1.45" id="svg_79"/>
+  <rect x="338.07694" y="758.53849" width="560" height="50" class="store" fill="#0c0c0c" stroke="#EEEEEE" stroke-width="1.35" id="svg_56"/>
+  <path stroke="#EEEEEE" d="m735,406l3.07692,512.76926" class="flow" marker-end="url(#arrowW)" fill="none" stroke-width="1.45" id="svg_80"/>
+  <path transform="rotate(29.6736 1114.23 497.385)" stroke="#FF8C00" d="m838.46155,497.38464l551.53841,0" class="flow-ext" marker-end="url(#arrowO)" fill="none" stroke-width="1.45" id="svg_94"/>
+  <path transform="rotate(43.5975 949.704 465.305)" stroke="#EEEEEE" d="m812.93623,465.30529l273.53555,0" class="flow" marker-end="url(#arrowW)" fill="none" stroke-width="1.45" id="svg_83"/>
+  <path stroke="#EEEEEE" d="m699.64914,389.99804l0,442.95294" class="flow-crit" marker-end="url(#arrowW)" fill="none" stroke-width="1.85" id="svg_84"/>
+  <path stroke="#EEEEEE" d="m765,410l0,596.23078" class="flow-crit" marker-end="url(#arrowW)" fill="none" stroke-width="1.85" id="svg_86"/>
+  <path stroke="#EEEEEE" d="m1097.69234,691.38461l0,96.00002l-186.9231,0" class="flow" marker-end="url(#arrowW)" fill="none" stroke-width="1.45" id="svg_88"/>
+  <path d="m1124,168l246,0" class="flow-ext" marker-end="url(#arrowO)" fill="none" stroke="#FF8C00" stroke-width="1.45" id="svg_90"/>
+  <path d="m1142.30769,342.3077l240,0" class="flow-ext" marker-end="url(#arrowO)" fill="none" stroke="#FF8C00" stroke-width="1.45" id="svg_91"/>
+  <path transform="rotate(89.762 1807.27 394.154)" stroke="#FF8C00" d="m1620.73393,394.15402l373.07707,0" class="flow-ext" marker-end="url(#arrowO)" fill="none" stroke-width="1.45" id="svg_92"/>
+  <path transform="rotate(40.9043 1242.81 491.283)" stroke="#FF8C00" d="m1091.72509,491.28305l302.17137,0" class="flow-ext" marker-end="url(#arrowO)" fill="none" stroke-width="1.45" id="svg_93"/>
+  <path fill="#101010" stroke="#4a4a4a" stroke-width="0.6" opacity="undefined" d="m131,124c0,-1.08676 0.91324,-2 2,-2l100,0c1.08676,0 2,0.91324 2,2l0,42c0,1.08676 -0.91324,2 -2,2l-100,0c-1.08676,0 -2,-0.91324 -2,-2l0,-42z" id="svg_95"/>
+  <text x="142" y="135" class="label-yellow" font-size="8" font-family="ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif" fill="#FFD700" id="svg_96">Registration</text>
+  <text x="142" y="144" class="label-yellow" font-size="8" font-family="ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif" fill="#FFD700" id="svg_97">Login credentials</text>
+  <text x="141" y="155" class="label-yellow" font-size="8" font-family="ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif" fill="#FFD700" id="svg_98">Password reset</text>
+  <text x="142" y="163" class="label-yellow" font-size="8" font-family="ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif" fill="#FFD700" id="svg_99">MFA code submit</text>
+  <path fill="#000000" stroke="null" opacity="undefined" d="m177,255c0,-1.08676 0.91324,-2 2,-2l91,0c1.08676,0 2,0.91324 2,2l0,12c0,1.08676 -0.91324,2 -2,2l-91,0c-1.08676,0 -2,-0.91324 -2,-2l0,-12z" id="svg_100"/>
+  <text x="183.59884" y="280.23223" class="label-yellow" font-size="8" font-family="ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif" fill="#ffd700" id="svg_101" stroke="null" transform="matrix(0.989445 0 0 1.33285 2.20605 -108.924)">Auth response and token</text>
+  <rect x="498" y="260" width="120" height="16" class="callout" fill="#101010" stroke="#4a4a4a" stroke-width="0.6" rx="2" ry="2" id="svg_102"/>
+  <text x="516" y="271" class="label-yellow" font-size="8" font-family="ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif" fill="#FFD700" id="svg_103">Validated auth request</text>
+  <rect x="492" y="340" width="148" height="26" class="callout" fill="#101010" stroke="#4a4a4a" stroke-width="0.6" rx="2" ry="2" id="svg_104"/>
+  <text x="496" y="351" class="label-yellow" font-size="8" font-family="ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif" fill="#FFD700" id="svg_105">Issue access token (short TTL)</text>
+  <text x="496" y="362" class="label-yellow" font-size="8" font-family="ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif" fill="#FFD700" id="svg_106">Return age policy state</text>
+  <path id="svg_113" d="m566.92308,820.76922c0,-1.08676 0.91324,-2 2,-2l114,0c1.08676,0 2,0.91324 2,2l0,12c0,1.08676 -0.91324,2 -2,2l-114,0c-1.08676,0 -2,-0.91324 -2,-2l0,-12z" opacity="undefined" stroke-width="0.6" stroke="#4a4a4a" fill="#101010"/>
+  <text x="571.38462" y="829.30768" class="label-yellow" font-size="8" font-family="ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif" fill="#FFD700" id="svg_114">Credential verify with Auth DB</text>
+  <circle cx="219" cy="146" r="9" class="stride" fill="#141414" stroke="#FFD700" stroke-width="1.1" id="svg_123"/>
+  <text x="218" y="148" text-anchor="middle" class="label-yellow" font-size="7" font-weight="bold" font-family="ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif" fill="#FFD700" id="svg_124">A1</text>
+  <circle cx="1297.69231" cy="359.23077" r="9" class="stride" fill="#141414" stroke="#FFD700" stroke-width="1.1" id="svg_125"/>
+  <text style="cursor: move;" transform="matrix(1.47034 0 0 1 -618.273 0)" stroke="null" x="1302.67569" y="361.69231" text-anchor="middle" class="label-yellow" font-size="7" font-weight="bold" font-family="ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif" fill="#FFD700" id="svg_126">A2</text>
+  <circle stroke="#FFD700" cx="1298.46151" cy="189.53846" r="15.15385" class="stride" fill="#141414" stroke-width="1.1" id="svg_127"/>
+  <text transform="matrix(2.71685 0 0 1.76618 -2232.98 -170.304)" stroke="null" x="1299.69653" y="206.80388" text-anchor="middle" class="label-yellow" font-size="7" font-weight="bold" font-family="ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif" fill="#FFD700" id="svg_128">A3</text>
+  <circle stroke="#FFD700" cx="719.84619" cy="909.53847" r="9" class="stride" fill="#141414" stroke-width="1.1" id="svg_131"/>
+  <text x="719.84619" y="913.53847" text-anchor="middle" class="label-yellow" font-size="7" font-weight="bold" font-family="ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif" fill="#FFD700" id="svg_132">A5</text>
+  <circle stroke="#FFD700" cx="277" cy="635.5" r="9" class="stride" fill="#141414" stroke-width="1.1" id="svg_133"/>
+  <text stroke="null" x="276" y="638" text-anchor="middle" class="label-yellow" font-size="7" font-weight="bold" font-family="ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif" fill="#FFD700" id="svg_134">A6</text>
+  <path id="svg_135" opacity="undefined" stroke-width="1.1" stroke="#FFD700" fill="#141414"/>
+  <circle stroke="#FFD700" cx="740.76926" cy="996.76925" r="12.07692" class="stride" fill="#141414" stroke-width="1.1" id="svg_137"/>
+  <text transform="matrix(2.46669 0 0 2.36145 -1189.87 -1346.15)" stroke="null" x="782.4743" y="994.19938" text-anchor="middle" class="label-yellow" font-size="7" font-weight="bold" font-family="ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif" fill="#FFD700" id="svg_138">A8</text>
+  <text style="cursor: move;" x="31.69231" y="1129.99999" class="label-muted" font-size="12" font-family="ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif" fill="#989898" id="svg_139">A1 login ingress | A2 MFA external edge | A3 email external edge | A4 vault read edge</text>
+  <text x="30.15385" y="1148.61538" class="label-muted" font-size="12" font-family="ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif" fill="#989898" id="svg_140">A5 refresh replay surface | A6 revocation endpoint | A7 minor policy bypass | A8 audit integrity surface</text>
+  <text x="30.15385" y="1166.61538" class="label-muted" font-size="12" font-family="ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif" fill="#989898" id="svg_141">Legend: solid white = trusted sync flows, dashed white = async, orange = out-of-control dependency</text>
+  <line stroke="null" id="svg_144" y2="737.33332" x2="207.99996" y1="699.33332" x1="102.99997" fill="none"/>
+  <ellipse id="svg_147" cy="667.33334" cx="142.99997" stroke-width="0" stroke="#000000" fill="#ffff00"/>
+  <ellipse id="svg_148" cy="667.33334" cx="162.99997" stroke-width="0" stroke="#000000" fill="#ffff00"/>
+  <path stroke="#CC2222" id="svg_150" d="m121.99997,650.33331l122,0l0,14l-122,0l0,-14z" opacity="undefined" stroke-dasharray="8 5" stroke-width="0" fill="#000000"/>
+  <rect id="svg_151" height="1" width="0" y="732.33333" x="207.99996" stroke-dasharray="8 5" stroke-width="2" stroke="#CC2222" fill="#000000"/>
+  <text stroke-width="0" xml:space="preserve" text-anchor="start" font-family="ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif" font-size="8" id="svg_143" y="660.33334" x="131.99997" stroke="#000000" fill="#ffff00">Elevated/ admin auth actions</text>
+  <text x="570.84618" y="792.15387" text-anchor="middle" class="label" font-size="10" font-family="ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif" fill="#EEEEEE" id="svg_54">User DB (profile data, age flags, consent records)</text>
+  <rect stroke="null" id="svg_152" height="17" width="212.99999" y="903.10256" x="480.38458" fill="#000000"/>
+  <rect id="svg_153" height="1" width="23" y="847.33333" x="603.99995" fill="#000000"/>
+  <text transform="matrix(0.88866 0 0 1 52.7873 10)" stroke="#CC2222" xml:space="preserve" text-anchor="start" font-family="ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif" font-size="10" id="svg_154" y="903.02563" x="487.92236" stroke-dasharray="8 5" stroke-width="0" fill="#ffff00">Create/rotate/revoke token family; jti/session state.</text>
+  <rect stroke="null" id="svg_156" height="21" width="123.99999" y="986.43586" x="569.69227" fill="#000000"/>
+  <text xml:space="preserve" text-anchor="start" font-family="ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif" font-size="10" id="svg_155" y="1001.43586" x="574.61534" fill="#ffff00">Immutable auth events.</text>
+  <line id="svg_157" y2="416.33334" x2="623.99995" y1="375.33334" x1="678.99995" stroke-width="2" stroke="#e5e5e5" fill="none"/>
+  <path stroke="#e5e5e5" id="svg_158" d="m623.99995,415.33334l0,67" opacity="undefined" stroke-width="2" fill="none"/>
+  <path transform="rotate(90 623.41 485.046)" stroke="#ffffff" id="svg_159" d="m622.78965,490.4328l2.16333,-3.32722l-4.1827,0l-4.18269,0l0,-2.05971l0,-2.05971l4.13471,0c2.27409,0 4.1347,-0.1044 4.1347,-0.23199c0,-0.12759 -0.90531,-1.62484 -2.01179,-3.32722l-2.0118,-3.09523l1.85951,0l1.85951,0l2.83989,4.36125l2.83989,4.36125l-2.84533,4.3529l-2.84533,4.3529l-1.95762,0l-1.95762,0l2.16334,-3.32722l0,0z" stroke-width="2" fill="#ffffff"/>
+  <rect id="svg_161" height="20" width="131" y="452.33334" x="555.99995" stroke-dasharray="8 5" stroke-width="2" fill="#000000"/>
+  <text xml:space="preserve" text-anchor="start" font-family="ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif" font-size="9" id="svg_160" y="465.33334" x="560.99995" stroke-dasharray="8 5" stroke-width="2" fill="#ffff00">Provision/read profile context</text>
+  <line stroke="#ffffff" id="svg_162" y2="745.12795" x2="626.53826" y1="634.35876" x1="624.9998" stroke-width="2" fill="none"/>
+  <path transform="rotate(90 626.541 751.808)" stroke="#ffffff" id="svg_163" d="m626.0518,757.9902l1.70745,-3.81817l-3.30127,0l-3.30126,0l0,-2.36363l0,-2.36363l3.26339,0c1.79486,0 3.26338,-0.1198 3.26338,-0.26622c0,-0.14642 -0.71453,-1.8646 -1.58784,-3.81817l-1.58784,-3.55195l1.46765,0l1.46765,0l2.24143,5.00478l2.24143,5.00477l-2.24573,4.9952l-2.24573,4.9952l-1.54508,0l-1.54509,0l1.70745,-3.81817l0,0z" stroke-width="2" fill="#ffffff"/>
+  <rect id="svg_165" height="16.92307" width="132.30768" y="677.43567" x="492.69212" stroke-dasharray="8 5" stroke-width="2" fill="#000000"/>
+  <text xml:space="preserve" text-anchor="start" font-family="ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif" font-size="10" id="svg_164" y="689.74335" x="500.38444" stroke-dasharray="8 5" stroke-width="2" fill="#ffff00">Profile/privacy persistence.</text>
+  <path id="svg_166" d="m794.29331,418.88778l67.56677,78.63431" transform="rotate(18 828.077 458.205)" opacity="undefined" stroke-width="1.45" stroke="#EEEEEE" fill="none"/>
+  <path transform="rotate(-116 805.901 407.463)" stroke="#EEEEEE" id="svg_168" d="m805.52673,411.74319l1.30632,-2.64336l-2.52571,0l-2.5257,0l0,-1.63636l0,-1.63637l2.49673,0c1.3732,0 2.49673,-0.08294 2.49673,-0.18431c0,-0.10137 -0.54667,-1.29088 -1.21481,-2.64336l-1.21482,-2.45905l1.12286,0l1.12286,0l1.71486,3.46486l1.71486,3.46486l-1.71815,3.45823l-1.71815,3.45823l-1.1821,0l-1.1821,0l1.30633,-2.64336l0,0z" stroke-width="1.45" fill="#ffffff"/>
+  <path transform="rotate(63 868.654 441.691)" stroke="null" id="svg_170" d="m823.26926,446.65893l90.76923,0l0,-9.93524l-90.76923,0l0,9.93524z" opacity="undefined" stroke-dasharray="8 5" stroke-width="2" fill="#000000"/>
+  <rect transform="rotate(65 811.923 468.461)" id="svg_185" height="13.84615" width="96.92306" y="461.53826" x="763.46132" stroke-dasharray="8 5" stroke-width="2" stroke="null" fill="#000000"/>
+  <text transform="rotate(65 817.684 468.205)" stroke="null" xml:space="preserve" text-anchor="start" font-family="ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif" font-size="10" id="svg_169" y="472.82033" x="771.15362" stroke-dasharray="8 5" stroke-width="2" fill="#ffff00">Risk/challenge result.</text>
+  <text style="cursor: move;" transform="rotate(63 875.288 442.051)" xml:space="preserve" text-anchor="start" font-family="ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif" font-size="10" id="svg_172" y="446.66648" x="821.92285" stroke-dasharray="8 5" stroke-width="2" fill="#ffff00">Risk evaluation request.</text>
+  <line id="svg_173" y2="438.97417" x2="898.84592" y1="371.28187" x1="840.38439" stroke-dasharray="8 5" stroke-width="2" fill="none"/>
+  <path id="svg_175" d="m828.0767,397.43571l41.53846,92.30768" opacity="undefined" stroke-width="2" stroke="#ffffff" fill="none"/>
+  <path transform="rotate(61 872.202 495.823)" stroke="#ffffff" id="svg_176" d="m871.72816,500.11914l1.65425,-2.65352l-3.19841,0l-3.1984,0l0,-1.64265l0,-1.64266l3.16171,0c1.73894,0 3.16171,-0.08326 3.16171,-0.18502c0,-0.10176 -0.69227,-1.29584 -1.53837,-2.65352l-1.53837,-2.4685l1.42192,0l1.42192,0l2.17159,3.47817l2.17159,3.47817l-2.17576,3.47152l-2.17576,3.47152l-1.49694,0l-1.49694,0l1.65425,-2.65352l0,0z" stroke-width="2" fill="#ffffff"/>
+  <rect id="svg_187" height="18.46154" width="86.15384" y="290.76905" x="897.30746" fill="#141414"/>
+  <text style="cursor: move;" xml:space="preserve" text-anchor="start" font-family="ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif" font-size="9" id="svg_186" y="304.6152" x="908.07669" fill="#ffff00">Start/verify MFA</text>
+  <text xml:space="preserve" text-anchor="start" font-family="ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif" font-size="9" id="svg_188" y="350.76904" x="898.84592" stroke-width="2" fill="#ffff00">MFA pass/fail result</text>
+  <text xml:space="preserve" text-anchor="start" font-family="ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif" font-size="9" id="svg_189" y="333.84596" x="1173.20492" fill="#ffff00">OTP/TOTP external dependency</text>
+  <text transform="rotate(-15 910.382 191.795)" xml:space="preserve" text-anchor="start" font-family="ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif" font-size="9" id="svg_190" y="195.38444" x="848.58958" fill="#ffff00">Trigger reset/verification emails</text>
+  <text transform="rotate(43 993.393 484.615)" xml:space="preserve" text-anchor="start" font-family="ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif" font-size="10" id="svg_191" y="489.23056" x="931.66649" fill="#ffff00">Age/consent policy decision</text>
+  <text style="cursor: move;" xml:space="preserve" text-anchor="start" font-family="ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif" font-size="9" id="svg_192" y="778.46129" x="951.66649" fill="#ffff00">Age/consent policy decision</text>
+  <text transform="rotate(30 1092.89 467.692)" xml:space="preserve" text-anchor="start" font-family="ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif" font-size="10" id="svg_193" y="472.30748" x="1046.5382" fill="#ffff00">JWT signing key read</text>
+  <path id="svg_43" d="m1100.00001,680.61537c-36.46409,0 -66,-29.53591 -66,-66c0,-36.46409 29.53591,-66 66,-66c36.46409,0 66,29.53591 66,66c0,36.46409 -29.53591,66 -66,66z" opacity="undefined" stroke-width="1.7" stroke="#EEEEEE" fill="#0c0c0c"/>
+  <text style="cursor: move;" x="1100.00001" y="618.46153" text-anchor="middle" class="label" font-size="10" font-weight="bold" font-family="ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif" fill="#EEEEEE" id="svg_45">Policy Service</text>
+  <text style="cursor: move;" x="1100.00001" y="598.92307" text-anchor="middle" class="label" font-size="10" font-weight="bold" font-family="ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif" fill="#EEEEEE" id="svg_44">Parental Consent</text>
+  <text style="cursor: move;" transform="rotate(39.4479 1231.51 464.615)" xml:space="preserve" text-anchor="start" font-family="ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif" font-size="10" id="svg_194" y="469.23056" x="1192.69203" fill="#ffff00">MFA API key read</text>
+  <text style="cursor: move;" transform="rotate(90 1821.16 357.209) matrix(1.1283 0 0 1 -209.481 0)" stroke="null" xml:space="preserve" text-anchor="start" font-family="ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif" font-size="11" id="svg_195" y="361.53827" x="1745.86389" fill="#ffff00">SMTP credentials read</text>
+  <text xml:space="preserve" text-anchor="start" font-family="ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif" font-size="15" id="svg_196" y="643.58954" x="1278.84587" stroke="null" fill="#FFD700">A4</text>
+  <ellipse stroke="#ffff00" ry="16.15384" rx="13.84615" id="svg_197" cy="638.20492" cx="1288.07665" fill="none"/>
+  <ellipse ry="0.76923" id="svg_198" cy="833.58951" cx="1238.84587" stroke="null" fill="none"/>
+  <text font-weight="normal" transform="matrix(1.61845 0 0 2.13015 -627.863 -631.589)" stroke="#ffff00" xml:space="preserve" text-anchor="start" font-family="ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif" font-size="10" id="svg_200" y="569.02121" x="1015.76898" fill="none">A7</text>
+  <path id="svg_201" d="m1026.5382,589.74344c-8.49979,0 -15.38461,-7.57331 -15.38461,-16.92307c0,-9.34976 6.88483,-16.92307 15.38461,-16.92307c8.49979,0 15.38461,7.57331 15.38461,16.92307c0,9.34976 -6.88483,16.92307 -15.38461,16.92307z" opacity="undefined" stroke="#ffff00" fill="none"/>
+  <rect stroke="#ff0000" stroke-width="2" stroke-dasharray="5,5" id="svg_204" height="652.30761" width="781.53834" y="72.82037" x="532.69212" fill="none"/>
+  <rect id="svg_205" height="1.53846" width="0" y="892.82027" x="1400.38432" stroke-dasharray="5,5" stroke="#bf0000" fill="none"/>
+ </g>
+</svg>

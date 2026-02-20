@@ -243,6 +243,196 @@ const componentInfo = {
     assets: ["Scan engine integrity", "Detection signatures", "Scanning logs"],
     topThreats: ["T-M03 Polyglot File Upload", "Scanner bypass", "Malicious worker compromise"],
   },
+  // ─── Authentication & Identity Components (based on authenticate-dfd.svg) ──
+  authApiGateway: {
+    title: "API Gateway (DMZ — Auth Surface)",
+    meta: "TLS termination, rate limiting, auth routing",
+    responsibilities: [
+      "Terminates TLS for all auth endpoints (login, register, reset, MFA)",
+      "Applies rate limiting and bot detection to prevent brute-force and credential-stuffing attacks",
+      "Routes auth requests to Auth Service and returns JWT tokens and policy state to Player",
+      "Enforces input validation before forwarding to internal services",
+    ],
+    flows: [
+      "Player > API Gateway: Registration, Login credentials, Password reset, MFA code submit",
+      "Admin/Support > API Gateway: Elevated auth request",
+      "API Gateway > Auth Service: Validated auth request",
+      "Auth Service > API Gateway: Issue access token (short TTL), Return age policy state",
+      "API Gateway > Player: JWT Token / Auth Response",
+    ],
+    assets: ["Credentials in transit", "JWT tokens", "Session cookies", "Rate limit state"],
+    topThreats: ["T-A01 Credential Stuffing", "T-A06 Auth Endpoint DoS", "T-A05 Session Hijacking"],
+  },
+  authService: {
+    title: "Auth Service (Identity — Core)",
+    meta: "Registration, login, token issuance, MFA orchestration, risk evaluation",
+    responsibilities: [
+      "Handles email/password registration with bcrypt/argon2 hashing",
+      "Authenticates users and issues signed JWT tokens with role claims",
+      "Orchestrates MFA verification flow (delegates to MFA Verification service)",
+      "Manages password reset flow via Email Worker",
+      "Evaluates bot/risk signals and escalates challenges via Bot/Risk Engine",
+      "Applies age/parental consent policies via Parental Consent/Policy Service",
+      "Writes all auth events to immutable Audit Log",
+    ],
+    flows: [
+      "API Gateway > Auth Service: validated credentials",
+      "Auth Service > Auth DB: credential verify",
+      "Auth Service > Session/Token Store: create/rotate/revoke token family (jti/session state)",
+      "Auth Service > Audit Log: immutable auth events",
+      "Auth Service > Email Worker: trigger reset/verification emails (async)",
+      "Auth Service > MFA Verification: verify MFA code",
+      "Auth Service > User Profile Service: provision/read profile context",
+      "Auth Service ↔ Bot/Risk Engine: risk evaluation request / challenge result",
+      "Auth Service ↔ Policy Service: age/consent policy decision",
+      "Auth Service > Secrets Vault: read JWT signing keys",
+    ],
+    assets: ["Hashed passwords", "JWT signing logic", "MFA secrets/seeds", "User role assignments", "Age flags", "Risk signals"],
+    topThreats: ["T-A01 Credential Stuffing", "T-A02 JWT Forgery", "T-A03 Password Reset Abuse", "T-A04 MFA Bypass"],
+  },
+  authUserProfile: {
+    title: "User Profile Service (Internal)",
+    meta: "Profile data, age flags, privacy settings",
+    responsibilities: [
+      "Stores and serves user metadata (display name, stats, preferences)",
+      "Manages age flags and parental consent records (COPPA/GDPR-K)",
+      "Enforces privacy flags for minor accounts",
+    ],
+    flows: [
+      "Auth Service > User Profile Service: provision/read profile context",
+      "User Profile Service > User DB: read/write profile data, age flags, consent records",
+    ],
+    assets: ["PII (name, email, DOB)", "Age classification flags", "Privacy settings", "Parental consent records"],
+    topThreats: ["T-A07 Minor Data Exposure / Age Flag Bypass", "Broken access control to other profiles", "PII leakage"],
+  },
+  authEmailWorker: {
+    title: "Email Worker (Background — Async)",
+    meta: "Async email dispatch for auth flows",
+    responsibilities: [
+      "Sends password reset emails with time-limited, single-use tokens",
+      "Sends email verification links for new registrations",
+      "Reads SMTP credentials from Secrets Vault",
+    ],
+    flows: [
+      "Auth Service > Email Worker: trigger reset/verification emails (async)",
+      "Email Worker > External Email Provider: SMTP/API dispatch",
+      "Email Worker > Secrets Vault: read SMTP credentials",
+      "External Email Provider > Player: password reset / verification email",
+    ],
+    assets: ["Reset tokens (time-limited, single-use)", "SMTP credentials (via vault)", "Email content"],
+    topThreats: ["T-A03 Password Reset Token Abuse", "Reset token leakage", "Email enumeration via differing responses"],
+  },
+  authMfaService: {
+    title: "MFA Verification Service (Internal)",
+    meta: "TOTP validation and SMS OTP dispatch",
+    responsibilities: [
+      "Validates TOTP codes against stored MFA seeds",
+      "Dispatches SMS OTP via external provider when SMS MFA is configured",
+      "Returns verification result (pass/fail) to Auth Service",
+    ],
+    flows: [
+      "Auth Service > MFA Service: verify MFA code",
+      "MFA Service > Auth Service: MFA result (pass/fail)",
+      "MFA Service > External MFA/SMS Provider: OTP/TOTP external dependency",
+      "MFA Service > Secrets Vault: read MFA API keys",
+    ],
+    assets: ["TOTP secrets/seeds", "SMS OTP codes in transit", "MFA provider API keys"],
+    topThreats: ["T-A04 MFA Bypass / Downgrade", "SMS interception / SIM swap", "TOTP secret exposure"],
+  },
+  authBotRiskEngine: {
+    title: "Bot / Risk Engine (Internal)",
+    meta: "Anomaly detection and challenge escalation",
+    responsibilities: [
+      "Evaluates login/registration requests for bot patterns and credential stuffing signals",
+      "Issues CAPTCHA or step-up authentication challenges on suspicious activity",
+      "Returns risk assessment result to Auth Service for decision-making",
+    ],
+    flows: [
+      "Auth Service > Bot/Risk Engine: risk evaluation request",
+      "Bot/Risk Engine > Auth Service: risk/challenge result",
+    ],
+    assets: ["Risk signals", "Challenge state", "Anomaly detection models"],
+    topThreats: ["T-A01 Credential Stuffing (primary defence line)", "Bot bypass / adversarial challenge evasion", "Model poisoning"],
+  },
+  authPolicyService: {
+    title: "Parental Consent / Policy Service (Internal)",
+    meta: "Age and consent policy decisions (COPPA/GDPR-K)",
+    responsibilities: [
+      "Applies COPPA/GDPR-K age restriction rules based on DOB from User Profile Service",
+      "Enforces parental consent requirements for minor accounts",
+      "Returns policy decision to Auth Service for feature gating",
+    ],
+    flows: [
+      "Auth Service > Policy Service: age/consent policy decision request",
+      "Policy Service > Auth Service: policy decision result",
+      "Policy Service > Secrets Vault: read policy keys (if applicable)",
+    ],
+    assets: ["Age flags", "Parental consent records", "Policy configuration"],
+    topThreats: ["T-A07 Minor Data Exposure / Age Flag Bypass", "Consent record tampering", "DOB manipulation at registration"],
+  },
+  authDatastores: {
+    title: "Persistence & Logging Zone (Auth Data Stores)",
+    meta: "Auth DB, User DB, Session/Token Store, Audit Log",
+    responsibilities: [
+      "Auth DB stores hashed passwords, MFA seeds, and account state",
+      "User DB holds profile data, age flags, and parental consent records",
+      "Session/Token Store manages JWT jti, refresh token families, and revocation state",
+      "Audit Log preserves all auth events in append-only format for forensics",
+    ],
+    flows: [
+      "Auth Service > Auth DB: credential verify (hashed passwords, MFA seeds)",
+      "Auth Service > Session/Token Store: token family create/rotate/revoke",
+      "User Profile Service > User DB: profile/privacy persistence",
+      "Auth Service > Audit Log: immutable auth event writes",
+    ],
+    assets: ["Hashed credentials", "MFA seeds", "PII (User DB)", "Session/token state (jti, refresh family)", "Non-repudiation evidence (Audit Log)"],
+    topThreats: ["T-A08 Auth DB Compromise", "Session store tampering / refresh replay", "Audit log deletion", "Broken authZ to data stores"],
+  },
+  authExtEmail: {
+    title: "External Email Provider (Out of Control)",
+    meta: "Third-party email delivery (SendGrid/SES style)",
+    responsibilities: [
+      "Delivers password reset and verification emails to players",
+      "Not trusted by default — email content integrity depends on server-side token validation",
+    ],
+    flows: [
+      "Email Worker > External Email Provider: SMTP/API request",
+      "External Email Provider > Player: delivered email",
+    ],
+    assets: ["Email delivery metadata", "Reset link contents"],
+    topThreats: ["T-A03 Email interception / phishing", "Spoofed sender / provider compromise", "Delivery failure blocking resets"],
+  },
+  authExtMfa: {
+    title: "External MFA / SMS Provider (Out of Control)",
+    meta: "Third-party TOTP/SMS OTP provider (Twilio/Authy style)",
+    responsibilities: [
+      "Processes SMS OTP delivery or TOTP verification requests from MFA Service",
+      "Availability directly impacts MFA flow — outages can block user login",
+    ],
+    flows: [
+      "MFA Service > External MFA/SMS Provider: OTP/TOTP external dependency",
+    ],
+    assets: ["SMS delivery state", "OTP codes in transit"],
+    topThreats: ["T-A04 MFA Bypass (SMS interception / SIM swap)", "Provider downtime blocking login", "OTP replay"],
+  },
+  authSecretsVault: {
+    title: "Secrets Vault (Auth Keys — Out of Control)",
+    meta: "JWT signing keys, SMTP credentials, MFA API keys",
+    responsibilities: [
+      "Stores JWT signing keys used by Auth Service",
+      "Stores SMTP credentials used by Email Worker",
+      "Stores MFA provider API keys used by MFA Service",
+      "Enforces strict RBAC and audit on all secret access",
+    ],
+    flows: [
+      "Auth Service > Secrets Vault: read JWT signing keys",
+      "Email Worker > Secrets Vault: read SMTP credentials",
+      "MFA Service > Secrets Vault: read MFA API keys",
+      "Policy Service > Secrets Vault: read policy keys",
+    ],
+    assets: ["JWT signing keys", "SMTP credentials", "MFA API keys", "Encryption keys"],
+    topThreats: ["T-A02 Key compromise → mass token forgery", "Over-permissive vault access", "No key rotation policy"],
+  },
 };
 
 // ─── Render component detail panel with pagination ───────────────────────────
@@ -441,9 +631,10 @@ function setupDfdZoom(wrapId, imgId, resetBtnId) {
   });
 }
 
-// Initialize both DFDs
+// Initialize all DFDs
 setupDfdZoom("paymentDfdWrap", "paymentDfdImg", "zoomReset");
 setupDfdZoom("mediaDfdWrap", "mediaDfdImg", "mediaZoomReset");
+setupDfdZoom("authDfdWrap", "authDfdImg", "authZoomReset");
 
 // ─── Assumptions table ────────────────────────────────────────────────────────
 const assumptions = [
@@ -583,18 +774,179 @@ const threats = [
       },
     ],
   },
+  // ─── Authentication & Identity Threats ──────────────────────────────────
   {
     id: "T-A01",
-    subsystem: "Auth",
-    componentsAffected: "Auth Service, Session Store",
-    dataAsset: "Session tokens / user authentication state",
-    dataFlow: "Player > Auth Service > Session Store",
-    stride: { S:true, T:false, R:false, I:true, D:false, E:false },
-    threatName: "Session Hijacking / Cookie Theft",
-    threatDescription: "Attacker steals or intercepts session tokens via MITM, XSS, or log injection to impersonate users.",
-    possibleImpact: "Account takeover, player data theft, fraudulent transactions, reputation damage",
-    likelihoodScore: 4,
+    subsystem: "Authentication & Identity",
+    componentsAffected: "API Gateway, Auth Service, Auth DB, Bot/Risk Engine",
+    dataAsset: "User credentials (email + password)",
+    dataFlow: "Player → API Gateway → Auth Service → Auth DB",
+    stride: { S:true, T:false, R:false, I:false, D:false, E:false },
+    threatName: "Credential Stuffing / Brute Force",
+    threatDescription: "Attacker uses automated tools with leaked credential lists to attempt mass login (A1 — login ingress). Without adequate rate limiting, account lockout, and Bot/Risk Engine challenge escalation, valid accounts can be compromised at scale.",
+    possibleImpact: "Mass account takeover, financial loss via in-game marketplace purchases, reputation damage, potential harm to minor accounts whose credentials are reused.",
+    likelihoodScore: 5,
+    impactScore: 4,
+    mitigations: [
+      {
+        title: "Rate Limiting & Account Lockout",
+        description: "Enforce max 5 failed login attempts per minute per account. Lock for 15 min after threshold. Apply per-IP and per-account limits.",
+        priority: "CRITICAL",
+      },
+      {
+        title: "Bot/Risk Engine CAPTCHA Escalation",
+        description: "Trigger CAPTCHA or step-up challenge via Bot/Risk Engine upon suspicious login patterns or velocity anomalies.",
+        priority: "CRITICAL",
+      },
+      {
+        title: "Credential Stuffing Detection",
+        description: "Monitor for logins using known-compromised credentials. Integrate threat intel feeds and check against breach databases.",
+        priority: "HIGH",
+      },
+      {
+        title: "Adaptive Throttling",
+        description: "Increase delay between attempts exponentially after each failure to slow down automated attacks.",
+        priority: "HIGH",
+      },
+      {
+        title: "MFA Enforcement",
+        description: "Require MFA for all accounts, particularly those with marketplace purchase history or admin roles.",
+        priority: "HIGH",
+      },
+    ],
+  },
+  {
+    id: "T-A02",
+    subsystem: "Authentication & Identity",
+    componentsAffected: "Auth Service, Secrets Vault, Session/Token Store",
+    dataAsset: "JWT signing key / JWT tokens",
+    dataFlow: "Auth Service → Secrets Vault (read key) → API Gateway → Player (JWT)",
+    stride: { S:true, T:true, R:false, I:false, D:false, E:true },
+    threatName: "JWT Token Forgery / Key Compromise",
+    threatDescription: "If the JWT signing key is leaked from the Secrets Vault (A4 — vault read edge) or a weak algorithm (e.g. HS256 with guessable secret) is used, an attacker can forge valid JWT tokens with arbitrary role claims, including admin/moderator privileges.",
+    possibleImpact: "Complete identity spoofing, privilege escalation to admin/moderator roles, unauthorized access to all game services that trust the JWT.",
+    likelihoodScore: 2,
     impactScore: 5,
+    mitigations: [
+      {
+        title: "RS256/ES256 Algorithm Enforcement",
+        description: "Use asymmetric signing (RS256 or ES256). Reject tokens signed with HS256 or 'none'. Validate algorithm header explicitly.",
+        priority: "CRITICAL",
+      },
+      {
+        title: "Secrets Vault Access Control",
+        description: "Restrict JWT signing key access in Secrets Vault to Auth Service only. Enforce RBAC and audit all key reads.",
+        priority: "CRITICAL",
+      },
+      {
+        title: "Key Rotation Policy",
+        description: "Rotate JWT signing keys on a regular schedule (e.g. every 90 days). Invalidate tokens on key rotation.",
+        priority: "HIGH",
+      },
+      {
+        title: "Short Token TTL",
+        description: "Use sub-hourly expiry for access tokens. Require refresh token for renewal with anti-replay checks (jti tracking).",
+        priority: "HIGH",
+      },
+      {
+        title: "Token Revocation",
+        description: "Maintain a Session/Token Store with jti tracking to revoke tokens on logout, compromise, or key rotation.",
+        priority: "HIGH",
+      },
+    ],
+  },
+  {
+    id: "T-A03",
+    subsystem: "Authentication & Identity",
+    componentsAffected: "Auth Service, Email Worker, External Email Provider",
+    dataAsset: "Password reset token",
+    dataFlow: "Player → API Gateway → Auth Service → Email Worker → External Email Provider → Player",
+    stride: { S:true, T:false, R:false, I:true, D:false, E:false },
+    threatName: "Password Reset Token Abuse",
+    threatDescription: "Attacker exploits the password reset flow (A3 — email external edge) by intercepting reset emails, exploiting predictable/reusable reset tokens, or using email enumeration via differing server responses to identify registered accounts.",
+    possibleImpact: "Account takeover, PII exposure, potential targeting of minor accounts, chain to financial abuse via marketplace.",
+    likelihoodScore: 3,
+    impactScore: 4,
+    mitigations: [
+      {
+        title: "Single-use Reset Tokens",
+        description: "Invalidate reset token immediately upon first use. Never allow a token to be reused.",
+        priority: "CRITICAL",
+      },
+      {
+        title: "Short Token TTL (≤30 min)",
+        description: "Expire reset tokens after 30 minutes. Invalidate old tokens when a new reset is requested.",
+        priority: "CRITICAL",
+      },
+      {
+        title: "Constant-time Responses (No Enumeration)",
+        description: "Return identical response regardless of whether email is registered. Use background email dispatch to prevent timing-based enumeration.",
+        priority: "HIGH",
+      },
+      {
+        title: "Secure Token Generation",
+        description: "Use cryptographically secure random tokens (≥128 bits). Never use predictable sequences or UUIDs.",
+        priority: "HIGH",
+      },
+      {
+        title: "Rate Limit Password Reset",
+        description: "Limit reset requests per email/IP to prevent mass enumeration and email flooding.",
+        priority: "MEDIUM",
+      },
+    ],
+  },
+  {
+    id: "T-A04",
+    subsystem: "Authentication & Identity",
+    componentsAffected: "Auth Service, MFA Verification Service, External MFA/SMS Provider",
+    dataAsset: "MFA codes / TOTP secrets",
+    dataFlow: "Player → API Gateway → Auth Service → MFA Verification → External MFA/SMS Provider",
+    stride: { S:true, T:false, R:false, I:false, D:false, E:true },
+    threatName: "MFA Bypass / Downgrade",
+    threatDescription: "Attacker bypasses MFA (A2 — MFA external edge) by exploiting implementation flaws: skipping the MFA step by directly calling post-auth endpoints, downgrading to a weaker factor, or intercepting SMS OTP via SIM swapping.",
+    possibleImpact: "Account takeover despite MFA being enabled, undermines the strongest layer of account protection, high-value accounts (with marketplace purchases) are prime targets.",
+    likelihoodScore: 3,
+    impactScore: 5,
+    mitigations: [
+      {
+        title: "Server-side MFA State Enforcement",
+        description: "Track MFA completion server-side. Ensure no endpoint grants full session without confirmed MFA pass.",
+        priority: "CRITICAL",
+      },
+      {
+        title: "No Step-Skip Endpoints",
+        description: "Audit all post-auth endpoints to require MFA-verified session tokens. No bypass via direct API calls.",
+        priority: "CRITICAL",
+      },
+      {
+        title: "TOTP with Hardware Key Option",
+        description: "Prefer app-based TOTP over SMS OTP. Offer FIDO2/WebAuthn as a phishing-resistant option for high-risk accounts.",
+        priority: "HIGH",
+      },
+      {
+        title: "SIM Swap Detection",
+        description: "Monitor for SIM swap signals from carrier APIs. Flag accounts for re-verification after SIM change.",
+        priority: "HIGH",
+      },
+      {
+        title: "MFA Required for Sensitive Actions",
+        description: "Require MFA re-verification for marketplace purchases, profile changes, and password updates regardless of session age.",
+        priority: "HIGH",
+      },
+    ],
+  },
+  {
+    id: "T-A05",
+    subsystem: "Authentication & Identity",
+    componentsAffected: "API Gateway, Session/Token Store",
+    dataAsset: "Session tokens / JWT tokens",
+    dataFlow: "API Gateway → Player (JWT/cookie) // Player → API Gateway (subsequent requests)",
+    stride: { S:true, T:false, R:false, I:true, D:false, E:false },
+    threatName: "Session Hijacking / Token Theft",
+    threatDescription: "Attacker steals a valid session token or JWT (A5 — refresh replay surface) via XSS, network sniffing (if TLS misconfigured), or malicious browser extension. The stolen token grants full access to the victim's account for the token lifetime.",
+    possibleImpact: "Impersonation of the victim, access to PII and game state, ability to make marketplace purchases, chat as the victim, or upload content under their identity.",
+    likelihoodScore: 3,
+    impactScore: 4,
     mitigations: [
       {
         title: "HTTPS / TLS Everywhere",
@@ -624,37 +976,122 @@ const threats = [
     ],
   },
   {
-    id: "T-A02",
-    subsystem: "Auth",
-    componentsAffected: "Auth Service, User DB",
-    dataAsset: "User passwords / credential store",
-    dataFlow: "Player > Auth Service > User DB",
-    stride: { S:true, T:false, R:false, I:false, D:false, E:false },
-    threatName: "Brute Force Password Attack",
-    threatDescription: "Attacker attempts rapid login guesses to crack weak or common passwords.",
-    possibleImpact: "Account compromise, unauthorized access, botnet recruitment",
-    likelihoodScore: 3,
+    id: "T-A06",
+    subsystem: "Authentication & Identity",
+    componentsAffected: "API Gateway, Auth Service",
+    dataAsset: "Auth service availability",
+    dataFlow: "Player → API Gateway → Auth Service",
+    stride: { S:false, T:false, R:false, I:false, D:true, E:false },
+    threatName: "Auth Endpoint DoS / Resource Exhaustion",
+    threatDescription: "Attacker floods auth endpoints (login, register, password reset) or admin revocation (A6 — revocation endpoint) with high-volume requests. Password hashing (bcrypt/argon2) is intentionally CPU-expensive, making auth services especially vulnerable to resource exhaustion.",
+    possibleImpact: "All players unable to log in or register, complete game service outage for new and returning users, reputational damage.",
+    likelihoodScore: 4,
     impactScore: 4,
     mitigations: [
       {
-        title: "Rate Limiting & Account Lockout",
-        description: "Enforce max 5 failed login attempts per minute per account. Lock for 15 min after threshold.",
+        title: "Rate Limiting on Auth Endpoints",
+        description: "Apply strict per-IP and per-account rate limits on login, register, and reset endpoints.",
         priority: "CRITICAL",
       },
       {
-        title: "Adaptive Throttling",
-        description: "Increase delay between attempts (exponential backoff) after each failure to slow down attackers.",
+        title: "Async Hashing Queue",
+        description: "Offload bcrypt/argon2 hashing to a worker queue to prevent direct CPU exhaustion of the Auth Service.",
         priority: "HIGH",
       },
       {
-        title: "Password Complexity & History",
-        description: "Enforce minimum complexity (12+ chars, mixed case, numbers, symbols). Prevent reuse of last 5 passwords.",
+        title: "CDN / WAF Protection",
+        description: "Place a WAF in front of auth endpoints to absorb volumetric attacks before they reach the service.",
         priority: "HIGH",
       },
       {
-        title: "Credential Stuffing Detection",
-        description: "Monitor for logins with known-compromised credentials. Feed checks to threat intel services.",
+        title: "CAPTCHA on Repeated Failures",
+        description: "Escalate to CAPTCHA challenge via Bot/Risk Engine after repeated failures from the same IP.",
+        priority: "HIGH",
+      },
+      {
+        title: "Separate Admin Auth Rate Limits",
+        description: "Apply stricter rate limits on admin/revocation endpoints (A6) than regular player auth flows.",
         priority: "MEDIUM",
+      },
+    ],
+  },
+  {
+    id: "T-A07",
+    subsystem: "Authentication & Identity",
+    componentsAffected: "User Profile Service, Parental Consent/Policy Service, User DB, Auth Service",
+    dataAsset: "Minor PII (DOB, name, email) and age flags",
+    dataFlow: "Auth Service → Policy Service → User Profile Service → User DB",
+    stride: { S:false, T:true, R:false, I:true, D:false, E:false },
+    threatName: "Minor Data Exposure / Age Flag Bypass",
+    threatDescription: "Attacker tampers with DOB during registration to bypass age restrictions (A7 — minor policy bypass), or exploits broken access controls to access profiles of minor users. If age flags are stored client-side or in JWT claims without Policy Service re-validation, a minor could self-remove restrictions.",
+    possibleImpact: "Minors exposed to unmoderated chat, marketplace, and adult content. Regulatory violations (COPPA/GDPR-K) leading to significant fines and legal action.",
+    likelihoodScore: 3,
+    impactScore: 5,
+    mitigations: [
+      {
+        title: "Server-side Age Flag Storage Only",
+        description: "Never store age flags in JWTs or client-accessible storage. Always re-validate from Policy Service/User DB server-side.",
+        priority: "CRITICAL",
+      },
+      {
+        title: "DOB Validation at Registration",
+        description: "Validate DOB server-side. Consider requiring parental email consent for under-13 registrations.",
+        priority: "CRITICAL",
+      },
+      {
+        title: "Policy Service Enforcement",
+        description: "All feature access checks must query Policy Service at request time, not rely on cached JWT claims.",
+        priority: "HIGH",
+      },
+      {
+        title: "COPPA/GDPR-K Consent Workflow",
+        description: "Implement parental consent workflow for minor account creation. Log consent records in User DB.",
+        priority: "HIGH",
+      },
+      {
+        title: "Access Control to Minor Profiles",
+        description: "Enforce strict authZ so minor profiles are not accessible to other users, including moderators without need.",
+        priority: "HIGH",
+      },
+    ],
+  },
+  {
+    id: "T-A08",
+    subsystem: "Authentication & Identity",
+    componentsAffected: "Auth DB, Session/Token Store, Audit Log",
+    dataAsset: "Hashed passwords, MFA seeds, session state",
+    dataFlow: "Auth Service → Auth DB (internal)",
+    stride: { S:false, T:true, R:false, I:true, D:false, E:true },
+    threatName: "Auth Database Compromise",
+    threatDescription: "Attacker gains unauthorized access to the Auth DB through SQL injection, misconfigured access controls, or lateral movement (A8 — audit integrity surface). Even with hashed passwords, MFA seeds and session metadata are immediately usable for account takeover.",
+    possibleImpact: "Mass credential exposure (offline cracking of hashes), MFA bypass using stolen TOTP seeds, session hijacking via stolen refresh tokens, complete platform compromise.",
+    likelihoodScore: 2,
+    impactScore: 5,
+    mitigations: [
+      {
+        title: "Parameterized Queries Only",
+        description: "Use ORM or parameterized queries for all Auth DB access. Never concatenate user input into SQL.",
+        priority: "CRITICAL",
+      },
+      {
+        title: "Least Privilege DB Accounts",
+        description: "Auth Service DB account should only have SELECT/INSERT/UPDATE on required tables. No DROP or DDL permissions.",
+        priority: "CRITICAL",
+      },
+      {
+        title: "Network Segmentation",
+        description: "Auth DB must not be accessible from public internet. Restrict to Auth Service internal network only.",
+        priority: "HIGH",
+      },
+      {
+        title: "MFA Seeds Encrypted at Rest",
+        description: "Encrypt TOTP seeds in Auth DB using keys from Secrets Vault. Hashed passwords alone are insufficient.",
+        priority: "HIGH",
+      },
+      {
+        title: "Immutable Audit Log Monitoring",
+        description: "Monitor Audit Log (A8) for anomalous DB access patterns. Alert on bulk reads or schema changes.",
+        priority: "HIGH",
       },
     ],
   },
@@ -1094,10 +1531,12 @@ function populateRemediationThreats(subsystem) {
   let filtered;
   if (subsystem === "Media Upload") {
     filtered = threats.filter(t => t.subsystem === "Upload Path" || t.subsystem === "Quarantine and Processing");
+  } else if (subsystem === "Auth") {
+    filtered = threats.filter(t => t.subsystem === "Authentication & Identity");
   } else {
     filtered = threats.filter(t => t.subsystem === subsystem);
   }
-  remedThreatsTitle.textContent = `Threats in ${subsystem.replace(" & Marketplace", " & Services")}`;
+  remedThreatsTitle.textContent = `Threats in ${subsystem.replace("Payment & Marketplace", "Payment & Services").replace("Auth", "Auth Services")}`;
   remedThreatsList.innerHTML = filtered.map(t => {
     const score = t.likelihoodScore * t.impactScore;
     const riskClass = getRiskClass(score);
@@ -1182,8 +1621,11 @@ function showRemediationDetail(threatId) {
     df.forEach((comp, i) => {
       if (i === df.length - 1) {
         steps.push({ title: `${comp} processes event`, sub: comp });
-        // For media upload threats (T-M01 to T-M06), use the impact section instead of generic text
-        if (thr.id && /^T-M0[1-6]$/.test(thr.id)) {
+        // For auth threats (T-A01 to T-A08), use possibleImpact as consequence step
+        if (thr.id && /^T-A0[1-8]$/.test(thr.id)) {
+          steps.push({ title: 'Attack Consequences & Impact', sub: thr.possibleImpact || 'Impact realized' });
+        } else if (thr.id && /^T-M0[1-6]$/.test(thr.id)) {
+          // For media upload threats (T-M01 to T-M06), use the impact section instead of generic text
           steps.push({ title: 'Attack Consequences & Impact', sub: thr.possibleImpact || 'Impact realized' });
         } else {
           steps.push({ title: 'Order marked as PAID / Action applied', sub: 'State transition and entitlement' });
@@ -1222,8 +1664,10 @@ function showRemediationDetail(threatId) {
     const t = title.toLowerCase();
     if (t.includes('hmac') || t.includes('signature') || t.includes('verify')) return [0,1];
     if (t.includes('idempotent') || t.includes('idempotency') || t.includes('dedup')) return [steps.length-2, steps.length-1];
-    if (t.includes('timestamp') || t.includes('replay')) return [0, steps.length-1];
-    if (t.includes('server-side') || t.includes('authority') || t.includes('validate')) return [steps.length-2];
+    if (t.includes('timestamp') || t.includes('replay') || t.includes('single-use') || t.includes('ttl')) return [0, steps.length-1];
+    if (t.includes('server-side') || t.includes('authority') || t.includes('validate') || t.includes('enforce')) return [steps.length-2];
+    if (t.includes('rate limit') || t.includes('lockout') || t.includes('throttl')) return [0, 1];
+    if (t.includes('mfa') || t.includes('captcha') || t.includes('bot')) return [0, 1];
     return [steps.length-1];
   }
 
