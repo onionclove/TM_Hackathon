@@ -983,8 +983,24 @@ function buildMatrix() {
       const cell  = el("div","mcell",`${score}<div style="font-size:11px;margin-top:4px;opacity:0.8">${threatCount} threat${threatCount !== 1 ? 's' : ''}</div>`);
       cell.dataset.score      = score;
       cell.dataset.riskLevel  = getRiskLevel(score);
-      cell.title = `Impact ${impact.score} × Likelihood ${likelihood.score} = ${score} (${getRiskLevel(score)})`;
-      cell.addEventListener("click", () => {
+      cell.dataset.threatCount = matchingThreats.length;
+      
+      // Display threat count only
+      if (matchingThreats.length > 0) {
+        cell.innerHTML = `<span class="threat-count">${matchingThreats.length}</span>`;
+      } else {
+        cell.innerHTML = "";
+      }
+      
+      cell.title = `Impact ${impact.score} × Likelihood ${likelihood.score} = ${score} (${getRiskLevel(score)}) | ${matchingThreats.length} threat(s)`;
+      
+      // Hover to show threat count
+      cell.addEventListener("mouseenter", () => {
+        cell.setAttribute("data-hover-count", `${matchingThreats.length} threat(s)`);
+      });
+      
+      cell.addEventListener("click", (e) => {
+        e.preventDefault();
         document.querySelectorAll(".mcell").forEach(x => x.classList.remove("active"));
         cell.classList.add("active");
         showBand(score);
