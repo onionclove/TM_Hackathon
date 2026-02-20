@@ -983,12 +983,15 @@ function buildMatrix() {
       const cell  = el("div","mcell",`${score}<div style="font-size:11px;margin-top:4px;opacity:0.8">${threatCount} threat${threatCount !== 1 ? 's' : ''}</div>`);
       cell.dataset.score      = score;
       cell.dataset.riskLevel  = getRiskLevel(score);
-      cell.title = `Impact ${impact.score} × Likelihood ${likelihood.score} = ${score} (${getRiskLevel(score)}) - ${threatCount} threat(s)`;
+      cell.title = `Impact ${impact.score} × Likelihood ${likelihood.score} = ${score} (${getRiskLevel(score)})`;
       cell.addEventListener("click", () => {
         document.querySelectorAll(".mcell").forEach(x => x.classList.remove("active"));
         cell.classList.add("active");
         showBand(score);
       });
+      
+
+      
       matrix.appendChild(cell);
     });
   });
@@ -1001,11 +1004,29 @@ function showBand(riskScore) {
       <b>Risk Score: ${riskScore} (${getRiskLevel(riskScore)})</b>
       <div class="muted tiny">${matches.length} threat(s)</div>
       <ul class="clean">
-        ${matches.map(t => `<li><b>${t.id}</b> — ${t.threatName} (L:${t.likelihoodScore} × I:${t.impactScore})</li>`).join("")
+        ${matches.map(t => `<li><a href="#" class="band-threat-link" data-threat-id="${t.id}"><b>${t.id}</b></a> — ${t.threatName} (L:${t.likelihoodScore} × I:${t.impactScore})</li>`).join("")
           || "<li class='muted'>No threats with this exact score.</li>"}
       </ul>
     </div>
   `;
+  
+  // Add click handlers for threat links in showBand
+  document.querySelectorAll(".band-threat-link").forEach(link => {
+    link.addEventListener("click", (e) => {
+      e.preventDefault();
+      const threatId = link.dataset.threatId;
+      const threatRow = document.querySelector(`#threatTable tbody tr[data-id="${threatId}"]`);
+      if (threatRow) {
+        document.querySelectorAll("#threatTable tbody tr").forEach(r => r.classList.remove("highlighted"));
+        threatRow.classList.add("highlighted");
+        threatRow.scrollIntoView({ behavior: "smooth", block: "center" });
+        showThreat(threatId);
+        setTimeout(() => {
+          document.querySelector("#threats").scrollIntoView({ behavior: "smooth" });
+        }, 300);
+      }
+    });
+  });
 }
 
 buildMatrix();
