@@ -310,7 +310,26 @@
       </div>
 
       <div class="card">
-        <div class="table-wrap">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+            <div style="display:flex;gap:12px;align-items:center;">
+              <label class="muted tiny" for="threatSort">Sort:</label>
+              <select id="threatSort" class="select" style="width:220px;">
+                <option value="risk_desc">Risk (high → low)</option>
+                <option value="risk_asc">Risk (low → high)</option>
+                <option value="likelihood_desc">Likelihood (high → low)</option>
+                <option value="impact_desc">Impact (high → low)</option>
+                <option value="id_asc">ID (A → Z)</option>
+              </select>
+            </div>
+
+            <div style="display:flex;gap:8px;align-items:center;">
+              <button class="btn small ghost" id="threatPrevBtn">← Prev</button>
+              <div class="page-indicator"><span id="threatPageNum" class="page-num">1</span> / <span id="threatPageTotal">1</span></div>
+              <button class="btn small ghost" id="threatNextBtn">Next →</button>
+            </div>
+          </div>
+
+          <div class="table-wrap">
           <table class="table" id="threatTable">
             <thead>
               <tr>

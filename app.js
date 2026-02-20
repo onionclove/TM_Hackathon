@@ -708,6 +708,16 @@ const searchThreats    = document.getElementById("searchThreats");
 const threatTableBody  = document.querySelector("#threatTable tbody");
 const threatDetail     = document.getElementById("threatDetail");
 
+// Pagination / sorting elements
+const threatSort       = document.getElementById('threatSort');
+const threatPrevBtn    = document.getElementById('threatPrevBtn');
+const threatNextBtn    = document.getElementById('threatNextBtn');
+const threatPageNum    = document.getElementById('threatPageNum');
+const threatPageTotal  = document.getElementById('threatPageTotal');
+
+let currentThreatPage = 1;
+const THREATS_PAGE_SIZE = 8;
+
 function getRiskLevel(score) {
   if (score <= 4)  return "Acceptable";
   if (score <= 9)  return "Adequate";
@@ -722,6 +732,10 @@ function refreshThreatTable() {
   const strideVal      = strideFilter.value;
   const riskLevelVal   = riskFilter.value;
 
+  // Reset to first page when filters/search change
+  // (caller typically takes care of this, but safe-guard here)
+  if (!currentThreatPage) currentThreatPage = 1;
+
   const rows = threats.filter(t => {
     const okQ = !q || [
       t.id, t.subsystem, t.componentsAffected, t.dataAsset,
@@ -733,7 +747,23 @@ function refreshThreatTable() {
     return okQ && okStride && okRisk;
   });
 
-  threatTableBody.innerHTML = rows.map(t => `
+  // Sorting
+  const sortVal = (threatSort && threatSort.value) || 'risk_desc';
+  switch (sortVal) {
+    case 'risk_desc': rows.sort((a,b) => (b.likelihoodScore*b.impactScore) - (a.likelihoodScore*a.impactScore)); break;
+    case 'risk_asc': rows.sort((a,b) => (a.likelihoodScore*a.impactScore) - (b.likelihoodScore*b.impactScore)); break;
+    case 'likelihood_desc': rows.sort((a,b) => b.likelihoodScore - a.likelihoodScore); break;
+    case 'impact_desc': rows.sort((a,b) => b.impactScore - a.impactScore); break;
+    case 'id_asc': rows.sort((a,b) => a.id.localeCompare(b.id)); break;
+  }
+
+  // Pagination
+  const total = Math.max(1, Math.ceil(rows.length / THREATS_PAGE_SIZE));
+  if (currentThreatPage > total) currentThreatPage = total;
+  const start = (currentThreatPage - 1) * THREATS_PAGE_SIZE;
+  const pageRows = rows.slice(start, start + THREATS_PAGE_SIZE);
+
+  threatTableBody.innerHTML = pageRows.map(t => `
     <tr data-id="${t.id}">
       <td><b>${t.id}</b></td>
       <td>${t.subsystem}</td>
@@ -753,6 +783,9 @@ function refreshThreatTable() {
       <td>${t.impactScore}</td>
     </tr>
   `).join("");
+  // Update pagination UI
+  if (threatPageNum) threatPageNum.textContent = currentThreatPage;
+  if (threatPageTotal) threatPageTotal.textContent = total;
 
   threatTableBody.querySelectorAll("tr").forEach(tr => {
     tr.addEventListener("click", () => showThreat(tr.dataset.id));
@@ -785,8 +818,15 @@ function showThreat(id) {
   `;
 }
 
-[strideFilter, riskFilter].forEach(el => el.addEventListener("change", refreshThreatTable));
-searchThreats.addEventListener("input", refreshThreatTable);
+// Wiring: filters/search should reset to page 1
+[strideFilter, riskFilter].forEach(el => el.addEventListener("change", () => { currentThreatPage = 1; refreshThreatTable(); }));
+searchThreats.addEventListener("input", () => { currentThreatPage = 1; refreshThreatTable(); });
+
+if (threatSort) threatSort.addEventListener('change', () => { currentThreatPage = 1; refreshThreatTable(); });
+if (threatPrevBtn) threatPrevBtn.addEventListener('click', () => { if (currentThreatPage>1) { currentThreatPage--; refreshThreatTable(); } });
+if (threatNextBtn) threatNextBtn.addEventListener('click', () => { currentThreatPage++; refreshThreatTable(); });
+
+// Initialize
 refreshThreatTable();
 
 // ─── Risk Matrix ──────────────────────────────────────────────────────────────
@@ -920,78 +960,152 @@ function populateRemediationThreats(subsystem) {
 
 function showRemediationDetail(threatId) {
   const threat = threats.find(t => t.id === threatId);
-  if (!threat) return;
-  
+  if (!threat || !threat.mitigations) return;
+
   currentRemediationThreat = threatId;
-  
-  // Update active state
+
   remedThreatsList.querySelectorAll(".threat-item").forEach(el => {
     el.classList.remove("active");
   });
   const activeEl = document.querySelector(`[data-threat-id="${threatId}"]`);
   if (activeEl) activeEl.classList.add("active");
-  
+
   const score = threat.likelihoodScore * threat.impactScore;
   const riskLevel = getRiskLevel(score);
-  
-  let html = `
-    <div class="mitigation-detail">
-      <div class="mitigation-threat-header">
-        <div class="threat-id-badge">${threat.id}</div>
-        <div class="threat-name">
+
+  remedDetail.innerHTML = `
+    <div class="mitigation-pack">
+      <div class="mitigation-pack-header">
+        <div>
+          <div class="threat-id-badge">${threat.id}</div>
           <h4>${threat.threatName}</h4>
-          <p>Risk Score: <strong>${score}</strong> (${riskLevel})</p>
+          <div class="muted tiny">Risk Score: ${score} (${riskLevel})</div>
         </div>
       </div>
-      
-      <p style="margin: 12px 0; font-size: 13px; color: var(--text);">
-        <strong>Threat:</strong> ${threat.threatDescription}
-      </p>
-      
-      <div class="mitigations-list">
-  `;
-  
-  threat.mitigations.forEach((mit, idx) => {
-    const priorityColor = mit.priority === "CRITICAL" ? "var(--danger)" : 
-                         mit.priority === "HIGH" ? "var(--warning)" : 
-                         "var(--accent2)";
-    html += `
-      <div class="mitigation-item">
-        <h5 style="color: ${priorityColor}">* ${mit.title}</h5>
-        <p>${mit.description}</p>
-        <div class="mitigation-tags">
-          <span class="mitigation-tag">${mit.priority}</span>
-          <span class="mitigation-tag">Mitigation ${idx + 1} of ${threat.mitigations.length}</span>
+
+      <div class="pack-controls">
+        <button class="btn primary" id="simulateBtn">Simulate Attack</button>
+        <button class="btn" id="resetSimBtn">Reset</button>
+      </div>
+
+      <div class="card-stage">
+        <div class="simulator">
+          <div class="attack-flow" id="attackFlow">
+            <!-- attack steps inserted here -->
+          </div>
+          <div class="controls-panel" id="controlsPanel">
+            <!-- controls inserted here -->
+          </div>
         </div>
-      </div>
-    `;
-  });
-  
-  html += `
-      </div>
-      
-      <div class="remediate-action">
-        <button class="btn small primary remediation-guide-btn" data-threat-id="${threatId}">Implementation Checklist</button>
-        <button class="btn small ghost remediation-mark-btn" data-threat-id="${threatId}">*Mark Remediated*</button>
+        <div class="sim-controls-note muted tiny">Tip: click <strong>Simulate Attack</strong> to animate attack flow then see controls activate.</div>
       </div>
     </div>
   `;
-  
-  remedDetail.innerHTML = html;
-  
-  // Attach button handlers
-  document.querySelector(".remediation-guide-btn")?.addEventListener("click", () => {
-    const checklist = threat.mitigations.map(m => `<li><b>${m.title}</b> - ${m.description}</li>`).join("");
-    openModal(`${threat.id}: ${threat.threatName}`, `
-      <h3>${threat.threatName}</h3>
-      <p style="font-size: 13px; margin: 10px 0;"><strong>Risk:</strong> ${score} (${riskLevel})</p>
-      <h4 style="margin: 14px 0 8px;">Implementation Checklist</h4>
-      <ul class="clean">${checklist}</ul>
-    `);
-  });
-  
-  document.querySelector(".remediation-mark-btn")?.addEventListener("click", () => {
-    alert(`Great! Marking "${threat.threatName}" as remediated. Track this in your security dashboard.`);
+
+  // Build attack steps (simple inference from dataFlow + action)
+  const attackFlowEl = document.getElementById('attackFlow');
+  const controlsEl = document.getElementById('controlsPanel');
+
+  function generateAttackSteps(thr) {
+    const df = (thr.dataFlow || '').split('>').map(s => s.trim()).filter(Boolean);
+    const steps = [];
+    // attacker initial action
+    if (/webhook|payment|order/i.test(thr.threatName) || /webhook/i.test(thr.dataAsset)) {
+      steps.push({ title: 'Attacker crafts forged webhook', sub: 'Forged HTTP payload mimicking provider event' });
+    } else {
+      steps.push({ title: 'Attacker performs malicious action', sub: thr.threatDescription || '' });
+    }
+    // map the data flow components to steps
+    df.forEach((comp, i) => {
+      if (i === df.length - 1) {
+        steps.push({ title: `${comp} processes event`, sub: comp });
+        steps.push({ title: 'Order marked as PAID / Action applied', sub: 'State transition and entitlement' });
+      } else {
+        steps.push({ title: `${comp} receives event`, sub: comp });
+      }
+    });
+    return steps;
+  }
+
+  const steps = generateAttackSteps(threat);
+  attackFlowEl.innerHTML = steps.map((s, i) => `
+    <div class="flow-step" data-step="${i}">
+      <div class="step-bubble">${i+1}</div>
+      <div class="step-content">
+        <div class="step-title">${s.title}</div>
+        <div class="step-sub">${s.sub || ''}</div>
+      </div>
+    </div>
+  `).join('');
+
+  // Build controls from mitigations
+  controlsEl.innerHTML = threat.mitigations.map((m, i) => `
+    <div class="control-item" data-index="${i}">
+      <div>
+        <div class="control-name">${m.title}</div>
+        <div class="control-desc">${m.description}</div>
+      </div>
+      <div class="control-indicator">○</div>
+    </div>
+  `).join('');
+
+  // mapping heuristics: which step indexes a control should block
+  function mapControlToSteps(title) {
+    const t = title.toLowerCase();
+    if (t.includes('hmac') || t.includes('signature') || t.includes('verify')) return [0,1];
+    if (t.includes('idempotent') || t.includes('idempotency') || t.includes('dedup')) return [steps.length-2, steps.length-1];
+    if (t.includes('timestamp') || t.includes('replay')) return [0, steps.length-1];
+    if (t.includes('server-side') || t.includes('authority') || t.includes('validate')) return [steps.length-2];
+    return [steps.length-1];
+  }
+
+  const simulateBtn = document.getElementById('simulateBtn');
+  const resetBtn = document.getElementById('resetSimBtn');
+  let animating = false;
+
+  function resetSimulation() {
+    animating = false;
+    document.querySelectorAll('#attackFlow .flow-step').forEach(s => { s.classList.remove('visible','blocked'); });
+    document.querySelectorAll('#controlsPanel .control-item').forEach(c => { c.classList.remove('active'); c.querySelector('.control-indicator').textContent = '○'; });
+    simulateBtn.disabled = false;
+    simulateBtn.textContent = 'Simulate Attack';
+  }
+
+  resetBtn.addEventListener('click', resetSimulation);
+
+  simulateBtn.addEventListener('click', () => {
+    if (animating) return;
+    animating = true;
+    simulateBtn.disabled = true;
+    simulateBtn.textContent = 'Running...';
+
+    const flowSteps = Array.from(document.querySelectorAll('#attackFlow .flow-step'));
+    const controlItems = Array.from(document.querySelectorAll('#controlsPanel .control-item'));
+
+    // Reveal attack steps sequentially
+    flowSteps.forEach((el, idx) => {
+      setTimeout(() => el.classList.add('visible'), idx * 450);
+    });
+
+    // After attack steps, activate controls one-by-one
+    const controlsStart = flowSteps.length * 450 + 400;
+    controlItems.forEach((ctrl, i) => {
+      setTimeout(() => {
+        ctrl.classList.add('active');
+        const ind = ctrl.querySelector('.control-indicator');
+        ind.textContent = '✓';
+        // block mapped steps
+        const stepsToBlock = mapControlToSteps(ctrl.querySelector('.control-name').textContent);
+        stepsToBlock.forEach(si => {
+          const stepEl = document.querySelector(`#attackFlow .flow-step[data-step='${si}']`);
+          if (stepEl) stepEl.classList.add('blocked');
+        });
+        // finalise button state when all controls done
+        if (i === controlItems.length - 1) {
+          simulateBtn.textContent = 'Completed';
+        }
+      }, controlsStart + i * 600);
+    });
   });
 }
 
