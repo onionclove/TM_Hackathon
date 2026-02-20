@@ -381,6 +381,28 @@ const threats = [
     possibleImpact: "Free entitlements, revenue loss, fraud scaling",
     likelihoodScore: 4,
     impactScore: 5,
+    mitigations: [
+      {
+        title: "HMAC Signature Verification",
+        description: "Every webhook must include an HMAC-SHA256 signature computed with a shared secret. Verify signature matches before processing.",
+        priority: "CRITICAL",
+      },
+      {
+        title: "Timestamp Validation",
+        description: "Reject webhooks older than 5 minutes to prevent replay of old events.",
+        priority: "HIGH",
+      },
+      {
+        title: "Webhook Secret Rotation",
+        description: "Rotate webhook secrets regularly and store in Secrets Vault with restricted access.",
+        priority: "HIGH",
+      },
+      {
+        title: "Event Source Verification",
+        description: "Confirm webhook origin via TLS certificate pinning or IP allowlist if provider allows.",
+        priority: "MEDIUM",
+      },
+    ],
   },
   {
     id: "T-P02",
@@ -394,6 +416,28 @@ const threats = [
     possibleImpact: "Duplicate inventory/currency grants, accounting inconsistencies",
     likelihoodScore: 3,
     impactScore: 4,
+    mitigations: [
+      {
+        title: "Idempotency Key Storage",
+        description: "Store processed event IDs in a cache/database with TTL. Reject duplicate event IDs immediately.",
+        priority: "CRITICAL",
+      },
+      {
+        title: "Idempotent State Machine",
+        description: "Design order state transitions to be idempotent—re-applying same event yields same result.",
+        priority: "CRITICAL",
+      },
+      {
+        title: "Provider Event Deduplication",
+        description: "Use provider's event ID as primary key rather than timestamp to prevent accidental duplicates.",
+        priority: "HIGH",
+      },
+      {
+        title: "Delivery Guarantees",
+        description: "Implement at-least-once delivery semantics with retry-after backoff on the client side.",
+        priority: "MEDIUM",
+      },
+    ],
   },
   {
     id: "T-P03",
@@ -407,8 +451,176 @@ const threats = [
     possibleImpact: "Undervalued purchases, marketplace abuse, financial loss",
     likelihoodScore: 4,
     impactScore: 4,
+    mitigations: [
+      {
+        title: "Server-side Pricing Authority",
+        description: "Never trust client-provided prices. Always fetch current price from Catalog DB server-side on checkout.",
+        priority: "CRITICAL",
+      },
+      {
+        title: "Price Validation Before Checkout",
+        description: "Validate SKU and price match before creating order. Reject if mismatch detected.",
+        priority: "CRITICAL",
+      },
+      {
+        title: "SKU Allowlist Enforcement",
+        description: "Maintain a validated list of purchasable SKUs. Reject any request for unknown/disabled SKUs.",
+        priority: "HIGH",
+      },
+      {
+        title: "Audit Logging",
+        description: "Log all price mismatches and attempted exploits to detect patterns and fraud rings.",
+        priority: "HIGH",
+      },
+    ],
+  },
+  {
+    id: "T-M01",
+    subsystem: "Media Upload",
+    componentsAffected: "Media Upload Service, File Storage",
+    dataAsset: "Uploaded files / user-generated content",
+    dataFlow: "Player > API Gateway > Media Upload Service > File Storage",
+    stride: { S:false, T:true, R:false, I:true, D:false, E:false },
+    threatName: "Malicious File Upload",
+    threatDescription: "Attacker uploads executable, malware, or obfuscated malicious content disguised as media that could compromise games or infect users.",
+    possibleImpact: "Malware distribution, reputation damage, legal liability, player account compromise",
+    likelihoodScore: 4,
+    impactScore: 5,
+    mitigations: [
+      {
+        title: "File Type Validation",
+        description: "Whitelist only allowed media types (jpg, png, mp4, etc). Validate magic bytes, not just extensions.",
+        priority: "CRITICAL",
+      },
+      {
+        title: "Antivirus & Malware Scanning",
+        description: "Scan all uploads with ClamAV or equivalent before storing. Quarantine suspicious files.",
+        priority: "CRITICAL",
+      },
+      {
+        title: "File Size Limits",
+        description: "Enforce strict size caps per file type to prevent storage exhaustion and scanning bypasses.",
+        priority: "HIGH",
+      },
+      {
+        title: "Content Moderation & Hashing",
+        description: "Use perceptual hashing to detect known malicious/CSAM content. Manual review for edge cases.",
+        priority: "HIGH",
+      },
+    ],
+  },
+  {
+    id: "T-M02",
+    subsystem: "Media Upload",
+    componentsAffected: "File Storage, Media Serving",
+    dataAsset: "File system integrity, user media",
+    dataFlow: "Media Upload Service > File Storage (write)",
+    stride: { S:false, T:true, R:false, I:false, D:false, E:false },
+    threatName: "File Overwrite / Path Traversal",
+    threatDescription: "Attacker manipulates file paths to overwrite legitimate files or escape upload directory using path traversal (../).",
+    possibleImpact: "Data corruption, service disruption, unauthorized access to system files",
+    likelihoodScore: 3,
+    impactScore: 4,
+    mitigations: [
+      {
+        title: "Path Traversal Protection",
+        description: "Reject any filename containing '..' or absolute paths. Use random UUIDs as filenames, not user input.",
+        priority: "CRITICAL",
+      },
+      {
+        title: "Strict Directory Isolation",
+        description: "Store uploads in a dedicated, write-only directory with no executable permissions. Use ACLs to prevent escape.",
+        priority: "CRITICAL",
+      },
+      {
+        title: "Immutable Filenames",
+        description: "Generate immutable filenames server-side (e.g., UUID v4). Map to user metadata separately.",
+        priority: "HIGH",
+      },
+      {
+        title: "File Integrity Checks",
+        description: "Store file hash on upload; verify during retrieval to detect tampering or replacement.",
+        priority: "MEDIUM",
+      },
+    ],
+  },
+  {
+    id: "T-A01",
+    subsystem: "Auth",
+    componentsAffected: "Auth Service, Session Store",
+    dataAsset: "Session tokens / user authentication state",
+    dataFlow: "Player > Auth Service > Session Store",
+    stride: { S:true, T:false, R:false, I:true, D:false, E:false },
+    threatName: "Session Hijacking / Cookie Theft",
+    threatDescription: "Attacker steals or intercepts session tokens via MITM, XSS, or log injection to impersonate users.",
+    possibleImpact: "Account takeover, player data theft, fraudulent transactions, reputation damage",
+    likelihoodScore: 4,
+    impactScore: 5,
+    mitigations: [
+      {
+        title: "HTTPS / TLS Everywhere",
+        description: "Enforce HTTPS for all traffic. Use HSTS headers to prevent downgrade attacks.",
+        priority: "CRITICAL",
+      },
+      {
+        title: "Secure Cookie Flags",
+        description: "Set HttpOnly, Secure, SameSite=Strict on all session cookies to prevent JS access and CSRF.",
+        priority: "CRITICAL",
+      },
+      {
+        title: "Token Rotation on Login",
+        description: "Issue new tokens on each login/auth event. Invalidate old tokens to limit window of reuse.",
+        priority: "HIGH",
+      },
+      {
+        title: "Short Token Expiry",
+        description: "Use sub-hourly expiry for access tokens, require refresh token for renewal with anti-replay checks.",
+        priority: "HIGH",
+      },
+      {
+        title: "XSS & CSRF Protections",
+        description: "Implement CSP, output encoding, and CSRF tokens to prevent XSS-based token theft.",
+        priority: "HIGH",
+      },
+    ],
+  },
+  {
+    id: "T-A02",
+    subsystem: "Auth",
+    componentsAffected: "Auth Service, User DB",
+    dataAsset: "User passwords / credential store",
+    dataFlow: "Player > Auth Service > User DB",
+    stride: { S:true, T:false, R:false, I:false, D:false, E:false },
+    threatName: "Brute Force Password Attack",
+    threatDescription: "Attacker attempts rapid login guesses to crack weak or common passwords.",
+    possibleImpact: "Account compromise, unauthorized access, botnet recruitment",
+    likelihoodScore: 3,
+    impactScore: 4,
+    mitigations: [
+      {
+        title: "Rate Limiting & Account Lockout",
+        description: "Enforce max 5 failed login attempts per minute per account. Lock for 15 min after threshold.",
+        priority: "CRITICAL",
+      },
+      {
+        title: "Adaptive Throttling",
+        description: "Increase delay between attempts (exponential backoff) after each failure to slow down attackers.",
+        priority: "HIGH",
+      },
+      {
+        title: "Password Complexity & History",
+        description: "Enforce minimum complexity (12+ chars, mixed case, numbers, symbols). Prevent reuse of last 5 passwords.",
+        priority: "HIGH",
+      },
+      {
+        title: "Credential Stuffing Detection",
+        description: "Monitor for logins with known-compromised credentials. Feed checks to threat intel services.",
+        priority: "MEDIUM",
+      },
+    ],
   },
 ];
+
 
 // ─── Threat table ─────────────────────────────────────────────────────────────
 const strideFilter     = document.getElementById("strideFilter");
@@ -585,3 +797,143 @@ function closeModal() {
 modalClose?.addEventListener("click", closeModal);
 modal?.addEventListener("click", e => { if (e.target === modal) closeModal() });
 document.addEventListener("keydown", e => { if (e.key === "Escape") closeModal() });
+
+// ─── Remediations Section ─────────────────────────────────────────────────────
+const remedSubsystemTabs = document.querySelectorAll("#remediations .tab");
+const remedThreatsList = document.getElementById("remedThreatsList");
+const remedDetail = document.getElementById("remedDetail");
+const remedThreatsTitle = document.getElementById("remedThreatsTitle");
+
+let currentRemediationSubsystem = "Payment & Marketplace";
+let currentRemediationThreat = null;
+
+function getRiskClass(score) {
+  if (score <= 4) return "low";
+  if (score <= 9) return "med";
+  return "high";
+}
+
+function populateRemediationThreats(subsystem) {
+  const filtered = threats.filter(t => t.subsystem === subsystem);
+  remedThreatsTitle.textContent = `Threats in ${subsystem.replace(" & Marketplace", " & Services")}`;
+  remedThreatsList.innerHTML = filtered.map(t => {
+    const score = t.likelihoodScore * t.impactScore;
+    const riskClass = getRiskClass(score);
+    return `
+      <li>
+        <div class="threat-item" data-threat-id="${t.id}">
+          <div class="threat-item-id">${t.id}</div>
+          <div class="threat-item-name">${t.threatName}</div>
+          <div class="threat-item-risk ${riskClass}">Risk ${score}</div>
+        </div>
+      </li>
+    `;
+  }).join("");
+  
+  // Attach click handlers
+  remedThreatsList.querySelectorAll(".threat-item").forEach(el => {
+    el.addEventListener("click", () => {
+      const threatId = el.dataset.threatId;
+      showRemediationDetail(threatId);
+    });
+  });
+}
+
+function showRemediationDetail(threatId) {
+  const threat = threats.find(t => t.id === threatId);
+  if (!threat) return;
+  
+  currentRemediationThreat = threatId;
+  
+  // Update active state
+  remedThreatsList.querySelectorAll(".threat-item").forEach(el => {
+    el.classList.remove("active");
+  });
+  const activeEl = document.querySelector(`[data-threat-id="${threatId}"]`);
+  if (activeEl) activeEl.classList.add("active");
+  
+  const score = threat.likelihoodScore * threat.impactScore;
+  const riskLevel = getRiskLevel(score);
+  
+  let html = `
+    <div class="mitigation-detail">
+      <div class="mitigation-threat-header">
+        <div class="threat-id-badge">${threat.id}</div>
+        <div class="threat-name">
+          <h4>${threat.threatName}</h4>
+          <p>Risk Score: <strong>${score}</strong> (${riskLevel})</p>
+        </div>
+      </div>
+      
+      <p style="margin: 12px 0; font-size: 13px; color: var(--text);">
+        <strong>Threat:</strong> ${threat.threatDescription}
+      </p>
+      
+      <div class="mitigations-list">
+  `;
+  
+  threat.mitigations.forEach((mit, idx) => {
+    const priorityColor = mit.priority === "CRITICAL" ? "var(--danger)" : 
+                         mit.priority === "HIGH" ? "var(--warning)" : 
+                         "var(--accent2)";
+    html += `
+      <div class="mitigation-item">
+        <h5 style="color: ${priorityColor}">* ${mit.title}</h5>
+        <p>${mit.description}</p>
+        <div class="mitigation-tags">
+          <span class="mitigation-tag">${mit.priority}</span>
+          <span class="mitigation-tag">Mitigation ${idx + 1} of ${threat.mitigations.length}</span>
+        </div>
+      </div>
+    `;
+  });
+  
+  html += `
+      </div>
+      
+      <div class="remediate-action">
+        <button class="btn small primary remediation-guide-btn" data-threat-id="${threatId}">Implementation Checklist</button>
+        <button class="btn small ghost remediation-mark-btn" data-threat-id="${threatId}">*Mark Remediated*</button>
+      </div>
+    </div>
+  `;
+  
+  remedDetail.innerHTML = html;
+  
+  // Attach button handlers
+  document.querySelector(".remediation-guide-btn")?.addEventListener("click", () => {
+    const checklist = threat.mitigations.map(m => `<li><b>${m.title}</b> - ${m.description}</li>`).join("");
+    openModal(`${threat.id}: ${threat.threatName}`, `
+      <h3>${threat.threatName}</h3>
+      <p style="font-size: 13px; margin: 10px 0;"><strong>Risk:</strong> ${score} (${riskLevel})</p>
+      <h4 style="margin: 14px 0 8px;">Implementation Checklist</h4>
+      <ul class="clean">${checklist}</ul>
+    `);
+  });
+  
+  document.querySelector(".remediation-mark-btn")?.addEventListener("click", () => {
+    alert(`Great! Marking "${threat.threatName}" as remediated. Track this in your security dashboard.`);
+  });
+}
+
+// Initialize remediations
+remedSubsystemTabs?.forEach(tab => {
+  tab.addEventListener("click", () => {
+    // Update active state
+    document.querySelectorAll("#remediations .tab").forEach(t => t.classList.remove("active"));
+    tab.classList.add("active");
+    
+    const subsystem = tab.dataset.subsystem;
+    currentRemediationSubsystem = subsystem;
+    populateRemediationThreats(subsystem);
+    remedDetail.innerHTML = `
+      <div class="remediation-empty">
+        <div style="font-size: 32px; margin-bottom: 10px;">:)</div>
+        <p class="muted">Click a threat to view mitigations</p>
+      </div>
+    `;
+  });
+});
+
+// Initialize with Payment & Marketplace
+populateRemediationThreats("Payment & Marketplace");

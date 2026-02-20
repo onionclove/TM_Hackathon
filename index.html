@@ -54,6 +54,7 @@
       <a href="#dfds" class="navlink">DFDs</a>
       <a href="#threats" class="navlink">Threats</a>
       <a href="#risk" class="navlink">Risk</a>
+      <a href="#remediations" class="navlink">Mitigations</a>
     </nav>
   </header>
 
@@ -357,6 +358,43 @@
         <div class="card">
           <h3>Selected Band</h3>
           <div id="matrixDetail" class="muted">Click a matrix cell to view matching threats.</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 6) Remediations / Mitigations -->
+    <section id="remediations" class="panel">
+      <div class="panel-head">
+        <h2>6. Remediations & Mitigations</h2>
+        <p class="muted">Browse by subsystem and deep-dive into actionable solutions.</p>
+      </div>
+
+      <!-- Subsystem tabs -->
+      <div class="tabs" role="tablist" aria-label="Subsystem Tabs">
+        <button class="tab active" role="tab" aria-selected="true" data-subsystem="Payment & Marketplace">Payment & Services</button>
+        <button class="tab" role="tab" aria-selected="false" data-subsystem="Media Upload">Media & Uploads</button>
+        <button class="tab" role="tab" aria-selected="false" data-subsystem="Auth">Auth Services</button>
+      </div>
+
+      <div class="grid two" id="remediationGrid">
+        <!-- Threats list (left) -->
+        <div class="card">
+          <h3 id="remedThreatsTitle">Threats in Payment & Services</h3>
+          <div class="dfd-panel-body" style="max-height: 500px; overflow-y: auto;">
+            <ul class="clean" id="remedThreatsList">
+              <!-- injected by JS -->
+            </ul>
+          </div>
+        </div>
+
+        <!-- Mitigation detail (right) -->
+        <div class="card">
+          <div id="remedDetail">
+            <div class="remediation-empty">
+              <div style="font-size: 32px; margin-bottom: 10px;">:)</div>
+              <p class="muted">Click a threat to view mitigations</p>
+            </div>
+          </div>
         </div>
       </div>
     </section>
