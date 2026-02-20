@@ -29,6 +29,18 @@
         <span class="spark" aria-hidden="true"></span>
       </button>
 
+      <div class="toc">
+        <label class="toc-title">Table of Contents</label>
+        <ul class="toc-list">
+          <li><a href="#intro" class="toc-link">1. Introduction</a></li>
+          <li><a href="#overview" class="toc-link">2. System Overview</a></li>
+          <li><a href="#dfds" class="toc-link">3. Data Flow Diagrams</a></li>
+          <li><a href="#risk" class="toc-link">4. Risk Matrix</a></li>
+          <li><a href="#threats" class="toc-link">5. Threat Modelling</a></li>
+          <li><a href="#remediations" class="toc-link">6. Remediations & Mitigations</a></li>
+        </ul>
+      </div>
+
       <div class="mini">
         <div class="mini-card">
           <div class="mini-title">Objective</div>
@@ -268,10 +280,32 @@
       </div>
     </section>
 
-    <!-- 4) Threat modelling -->
+    <!-- 4) Risk matrix (moved before threats) -->
+    <section id="risk" class="panel">
+      <div class="panel-head">
+        <h2>4. Risk Matrix</h2>
+        <p class="muted">Click a cell to view threats. Hover to see threat count. Click threat IDs to jump to details.</p>
+      </div>
+
+      <div class="grid two">
+        <div class="card">
+          <div class="matrix" id="riskMatrix" aria-label="Risk Matrix">
+            <!-- built by JS -->
+          </div>
+          <div class="muted tiny">Risk = Impact × Likelihood</div>
+        </div>
+
+        <div class="card">
+          <h3>Selected Band</h3>
+          <div id="matrixDetail" class="muted">Click a matrix cell to view matching threats.</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 5) Threat modelling -->
     <section id="threats" class="panel">
       <div class="panel-head">
-        <h2>4. Threat Modelling (STRIDE)</h2>
+        <h2>5. Threat Modelling (STRIDE)</h2>
         <p class="muted">Filter the table; click a threat to see details + mitigations.</p>
       </div>
 
@@ -355,28 +389,6 @@
               <!-- injected by JS -->
             </tbody>
           </table>
-        </div>
-      </div>
-    </section>
-
-    <!-- 5) Risk matrix -->
-    <section id="risk" class="panel">
-      <div class="panel-head">
-        <h2>5. Risk Matrix</h2>
-        <p class="muted">Click a cell to highlight threats in that band.</p>
-      </div>
-
-      <div class="grid two">
-        <div class="card">
-          <div class="matrix" id="riskMatrix" aria-label="Risk Matrix">
-            <!-- built by JS -->
-          </div>
-          <div class="muted tiny">Risk = Impact × Likelihood</div>
-        </div>
-
-        <div class="card">
-          <h3>Selected Band</h3>
-          <div id="matrixDetail" class="muted">Click a matrix cell to view matching threats.</div>
         </div>
       </div>
     </section>
