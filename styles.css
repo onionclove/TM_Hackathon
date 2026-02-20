@@ -518,6 +518,12 @@ code { font-family: var(--mono); font-size: .95em }
 .dfd-panel-body b { display: block; margin-bottom: 4px; font-size: 13px; color: var(--accent) }
 
 /* ── DFD Panel Pagination ── */
+.dfd-panel-action { margin-bottom: 12px }
+.dfd-panel-action .btn.full-width {
+  width: 100%;
+  display: block;
+}
+
 .dfd-panel-nav { margin-top: 18px; border-top: 1px solid #f0f0f5; padding-top: 12px }
 .dfd-panel-footer {
   display: flex;

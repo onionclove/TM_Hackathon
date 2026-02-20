@@ -153,10 +153,12 @@ const compTitle = document.getElementById("compTitle");
 const compMeta  = document.getElementById("compMeta");
 const compBody  = document.getElementById("compBody");
 const dfdPanelNav = document.getElementById("dfdPanelNav");
+const dfdPanelAction = document.getElementById("dfdPanelAction");
 const compPrevBtn = document.getElementById("compPrevBtn");
 const compNextBtn = document.getElementById("compNextBtn");
 const pageNumber = document.getElementById("pageNumber");
 const pageTotal = document.getElementById("pageTotal");
+const openThreatsBtn = document.getElementById("openThreatsFromComp");
 
 // Track component pagination state
 let currentComponent = null;
@@ -184,7 +186,7 @@ const getComponentPages = (compKey) => {
     },
     {
       title: "Top Threats",
-      content: `<div class="kv"><b>Top Threats</b>${list(c.topThreats)}<button class="btn small" id="openThreatsFromComp">Open related threats ↓</button></div>`
+      content: `<div class="kv"><b>Top Threats</b>${list(c.topThreats)}</div>`
     }
   ];
 };
@@ -204,14 +206,6 @@ function renderCompPage() {
   // Show/hide nav buttons
   compPrevBtn.disabled = currentPageIndex === 0;
   compNextBtn.disabled = currentPageIndex === pages.length - 1;
-
-  // Attach event listener for "Open related threats" button if it exists
-  document.getElementById("openThreatsFromComp")?.addEventListener("click", () => {
-    const c = componentInfo[currentComponent];
-    document.querySelector("#threats")?.scrollIntoView({ behavior: "smooth" });
-    document.getElementById("searchThreats").value = c.topThreats[0]?.split(" ")[0] || "";
-    refreshThreatTable();
-  });
 }
 
 function renderComp(compKey) {
@@ -225,6 +219,15 @@ function renderComp(compKey) {
   compMeta.textContent = c.meta;
   
   dfdPanelNav.style.display = "block";
+  dfdPanelAction.style.display = "block";
+  
+  // Update threats button with current component
+  openThreatsBtn.onclick = () => {
+    document.querySelector("#threats")?.scrollIntoView({ behavior: "smooth" });
+    document.getElementById("searchThreats").value = c.topThreats[0]?.split(" ")[0] || "";
+    refreshThreatTable();
+  };
+  
   renderCompPage();
 }
 
