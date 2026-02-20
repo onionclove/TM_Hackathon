@@ -108,7 +108,7 @@ code { font-family: var(--mono); font-size: .95em }
 .clean li { margin: 6px 0 }
 
 /* ── Grid ── */
-.grid { display: grid; gap: 14px }
+.grid { display: grid; gap: 24px }
 .grid.two { grid-template-columns: 1fr }
 @media (min-width: 900px) {
   .grid.two { grid-template-columns: 1fr 1fr }

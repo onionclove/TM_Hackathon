@@ -51,9 +51,9 @@
     <nav class="topbar-nav">
       <a href="#intro" class="navlink">Intro</a>
       <a href="#overview" class="navlink">System</a>
+      <a href="#risk" class="navlink">Risk</a>
       <a href="#dfds" class="navlink">DFDs</a>
       <a href="#threats" class="navlink">Threats</a>
-      <a href="#risk" class="navlink">Risk</a>
       <a href="#remediations" class="navlink">Mitigations</a>
     </nav>
   </header>
@@ -146,19 +146,41 @@
         <article class="card">
           <h3>How to Read This Report</h3>
           <ol class="clean">
-            <li>Review DFDs</li>
-            <li>Click components to see flows + assets</li>
-            <li>Threat table maps STRIDE → impact → mitigations</li>
-            <li>Risk matrix summarizes top risks</li>
+            <li>Understand risk landscape via matrix</li>
+            <li>Review DFDs and component flows</li>
+            <li>Explore detailed threats (STRIDE)</li>
+            <li>Review mitigations and remediations</li>
           </ol>
         </article>
       </div>
     </section>
 
-    <!-- 3) DFDs -->
+    <!-- 3) Risk matrix -->
+    <section id="risk" class="panel">
+      <div class="panel-head">
+        <h2>3. Risk Matrix</h2>
+        <p class="muted">Click a cell to highlight threats in that band.</p>
+      </div>
+
+      <div class="grid two">
+        <div class="card">
+          <div class="matrix" id="riskMatrix" aria-label="Risk Matrix">
+            <!-- built by JS -->
+          </div>
+          <div class="muted tiny">Risk = Impact × Likelihood</div>
+        </div>
+
+        <div class="card">
+          <h3>Selected Band</h3>
+          <div id="matrixDetail" class="muted">Click a matrix cell to view matching threats.</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 4) DFDs -->
     <section id="dfds" class="panel">
       <div class="panel-head">
-        <h2>3. Data Flow Diagrams</h2>
+        <h2>4. Data Flow Diagrams</h2>
         <p class="muted">Click components on the DFD to reveal details.</p>
       </div>
 
@@ -174,17 +196,50 @@
 
           <!-- General System DFD -->
           <div class="dfd-view active" id="dfd-system">
-            <div class="card">
-              <h3>General System DFD</h3>
-              <p class="muted">Add your general system DFD image to <code>assets/dfd-system.png</code> and update the HTML.</p>
+            <div class="dfd-wrap">
+              <img
+                src="assets/dfd-system.png"
+                alt="General System DFD"
+                class="dfd-img"
+                id="systemDfdImg"
+              />
             </div>
           </div>
 
           <!-- Media Upload DFD -->
           <div class="dfd-view" id="dfd-media">
-            <div class="card">
-              <h3>Media Upload DFD</h3>
-              <p class="muted">Add your media upload DFD image to <code>assets/dfd-media.png</code>.</p>
+
+            <div class="dfd-toolbar">
+              <div class="pill">Interactive DFD</div>
+              <div style="display:flex;gap:12px;align-items:center;">
+                <span class="hint tiny">Tip: click components to zoom in</span>
+                <button class="zoom-reset" id="mediaZoomReset">Reset Zoom</button>
+              </div>
+            </div>
+
+            <!--
+              Interactive media upload DFD with hotspots.
+              Positions are percentage-based for responsive scaling.
+              Adjust left/top/width/height to match your actual DFD layout.
+            -->
+            <div class="dfd-wrap" id="mediaDfdWrap">
+              <img
+                src="assets/dfd-media.png"
+                alt="Media Upload DFD"
+                class="dfd-img"
+                id="mediaDfdImg"
+              />
+
+              <!--
+                Hotspots: adjust these percentage values to match
+                the actual positions in your DFD image.
+              -->
+              <button class="hotspot" style="left:20.5%;top:42.5%;width:14%;height:20%;"  data-comp="mediaApiGateway"        data-zoom="2.8" aria-label="API Gateway"></button>
+              <button class="hotspot" style="left:43%;top:42.5%;width:14%;height:20%;"  data-comp="mediaUploadService"    data-zoom="2.6" aria-label="Media Upload Service"></button>
+              <button class="hotspot" style="left:58%;top:40%;width:10%;height:20%;"  data-comp="approvedQuarantineZones" data-zoom="2.2" aria-label="Approved/Quarantine Zones"></button>
+              <button class="hotspot" style="left:55%;top:7.5%;width:14%;height:20%;"  data-comp="contentCdn"            data-zoom="2.8" aria-label="Content CDN Server"></button>
+              <button class="hotspot" style="left:75%;top:31%;width:8%;height:25%;"  data-comp="moderatorZone"         data-zoom="2.6" aria-label="Moderator Zone"></button>
+              <button class="hotspot" style="left:87.5%;top:36%;width:8%;height:37%;"  data-comp="workerZone"            data-zoom="2.6" aria-label="Worker Zone"></button>
             </div>
           </div>
 
@@ -268,10 +323,10 @@
       </div>
     </section>
 
-    <!-- 4) Threat modelling -->
+    <!-- 5) Threat modelling -->
     <section id="threats" class="panel">
       <div class="panel-head">
-        <h2>4. Threat Modelling (STRIDE)</h2>
+        <h2>5. Threat Modelling (STRIDE)</h2>
         <p class="muted">Filter the table; click a threat to see details + mitigations.</p>
       </div>
 
@@ -355,28 +410,6 @@
               <!-- injected by JS -->
             </tbody>
           </table>
-        </div>
-      </div>
-    </section>
-
-    <!-- 5) Risk matrix -->
-    <section id="risk" class="panel">
-      <div class="panel-head">
-        <h2>5. Risk Matrix</h2>
-        <p class="muted">Click a cell to highlight threats in that band.</p>
-      </div>
-
-      <div class="grid two">
-        <div class="card">
-          <div class="matrix" id="riskMatrix" aria-label="Risk Matrix">
-            <!-- built by JS -->
-          </div>
-          <div class="muted tiny">Risk = Impact × Likelihood</div>
-        </div>
-
-        <div class="card">
-          <h3>Selected Band</h3>
-          <div id="matrixDetail" class="muted">Click a matrix cell to view matching threats.</div>
         </div>
       </div>
     </section>

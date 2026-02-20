@@ -146,6 +146,103 @@ const componentInfo = {
     assets: ["API keys", "Webhook signing secret", "Encryption keys"],
     topThreats: ["Secret compromise", "Over-permissive access", "No rotation"],
   },
+  // ─── Media Upload Components ─────────────────────────────────────────────────
+  mediaApiGateway: {
+    title: "API Gateway (Media)",
+    meta: "Entry point for media upload requests",
+    responsibilities: [
+      "Receives media upload requests from players",
+      "Routes requests to Media Upload Service",
+      "Rate limiting and basic request validation",
+    ],
+    flows: [
+      "Player > API Gateway: POST /upload with media file",
+      "API Gateway > Media Upload Service: forward upload",
+    ],
+    assets: ["User auth tokens", "Uploaded file metadata"],
+    topThreats: ["T-M01 Account Upload Impersonation", "T-M02 File Upload Flooding", "T-M03 Polyglot File Upload"],
+  },
+  mediaUploadService: {
+    title: "Media Upload Service",
+    meta: "Orchestrates upload processing pipeline",
+    responsibilities: [
+      "Accepts uploaded files and validates format/size",
+      "Sends files to Worker Zone for scanning",
+      "Routes approved/quarantined content based on scan results",
+    ],
+    flows: [
+      "API Gateway > Upload Service: media file",
+      "Upload Service > Worker Zone: scan request",
+      "Worker Zone > Upload Service: scan result",
+      "Upload Service > Approved/Quarantine Zones: store file",
+    ],
+    assets: ["File integrity", "Upload metadata", "Scan results"],
+    topThreats: ["T-M03 Polyglot File Upload", "T-M02 File Upload Flooding", "T-M06 Bucket Exposure"],
+  },
+  approvedQuarantineZones: {
+    title: "Approved/Quarantine Storage Zones",
+    meta: "Segregated storage for safe vs. flagged content",
+    responsibilities: [
+      "Approved Zone stores clean, verified content",
+      "Quarantine Zone isolates flagged/suspicious content",
+      "Enforces strict access control between zones",
+    ],
+    flows: [
+      "Upload Service > Approved Zone: clean files",
+      "Upload Service > Quarantine Zone: flagged files",
+      "Moderator > Quarantine Zone: review access",
+    ],
+    assets: ["User-generated content", "Content classification metadata"],
+    topThreats: ["T-M06 Bucket Exposure", "T-M05 Moderator repudiation", "T-M04 Moderator impersonation"],
+  },
+  contentCdn: {
+    title: "Content CDN Server",
+    meta: "Distributes approved media to players",
+    responsibilities: [
+      "Serves approved media files to end users",
+      "Caches content for performance",
+      "Enforces access controls on sensitive content",
+    ],
+    flows: [
+      "Approved Zone > CDN: replicate approved files",
+      "Player > CDN: request media",
+      "CDN > Player: serve content",
+    ],
+    assets: ["Public/private media files", "CDN credentials"],
+    topThreats: ["T-M03 Polyglot File Upload", "T-M06 Bucket Exposure", "CDN cache poisoning"],
+  },
+  moderatorZone: {
+    title: "Moderator Zone",
+    meta: "Human review interface for flagged content",
+    responsibilities: [
+      "Provides moderators access to quarantined content",
+      "Tracks moderation decisions and actions",
+      "Enforces moderator authentication and authorization",
+    ],
+    flows: [
+      "Moderator > Moderator Zone: review quarantined content",
+      "Moderator Zone > Quarantine Zone: read flagged files",
+      "Moderator > Upload Service: approve/reject decision",
+    ],
+    assets: ["Moderator credentials", "Review audit logs"],
+    topThreats: ["T-M04 Moderator impersonation", "T-M05 Moderator repudiation", "Audit log tampering"],
+  },
+  workerZone: {
+    title: "Worker Zone (Scanning)",
+    meta: "Automated content scanning and analysis",
+    responsibilities: [
+      "Scans uploaded files for malware/viruses",
+      "Checks content against policy rules (NSFW, violence, etc.)",
+      "Returns scan verdict to Upload Service",
+    ],
+    flows: [
+      "Upload Service > Worker Zone: file + scan request",
+      "Worker > Scanning engines: run analysis",
+      "Worker > Upload Service: scan verdict (clean/flagged)",
+    ],
+    assets: ["Scan engine integrity", "Detection signatures", "Scanning logs"],
+    topThreats: ["T-M03 Polyglot File Upload", "Scanner bypass", "Malicious worker compromise"],
+  },
 };
 
 // ─── Render component detail panel with pagination ───────────────────────────
@@ -266,75 +363,87 @@ compNextBtn?.addEventListener("click", () => {
 //   clickable while zoomed.
 // ─────────────────────────────────────────────────────────────────────────────
 
-const dfdWrap  = document.getElementById("paymentDfdWrap");
-const dfdImg   = document.getElementById("paymentDfdImg");
-const zoomReset = document.getElementById("zoomReset");
+// Generic zoom handler for multiple DFDs
+function setupDfdZoom(wrapId, imgId, resetBtnId) {
+  const dfdWrap  = document.getElementById(wrapId);
+  const dfdImg   = document.getElementById(imgId);
+  const zoomReset = document.getElementById(resetBtnId);
 
-let activeHotspot = null;
+  if (!dfdWrap || !dfdImg) return; // DFD not present
 
-document.querySelectorAll(".hotspot").forEach(btn => {
-  btn.addEventListener("click", () => {
-    const comp = btn.dataset.comp;
+  let activeHotspot = null;
 
-    // 1. Show component detail
-    renderComp(comp);
+  // Find hotspots within this specific wrap
+  const hotspots = dfdWrap.querySelectorAll(".hotspot");
+  
+  hotspots.forEach(btn => {
+    btn.addEventListener("click", () => {
+      const comp = btn.dataset.comp;
 
-    // 2. Parse the hotspot's inline percentage coords
-    const s           = btn.getAttribute("style");
-    const left        = parseFloat(s.match(/left:([\d.]+)%/)?.[1]  ?? 0);
-    const top         = parseFloat(s.match(/top:([\d.]+)%/)?.[1]   ?? 0);
-    const width       = parseFloat(s.match(/width:([\d.]+)%/)?.[1] ?? 10);
-    const height      = parseFloat(s.match(/height:([\d.]+)%/)?.[1]?? 10);
+      // 1. Show component detail
+      renderComp(comp);
 
-    // Centre of the hotspot in % terms
-    const cx = left + width  / 2;
-    const cy = top  + height / 2;
+      // 2. Parse the hotspot's inline percentage coords
+      const s           = btn.getAttribute("style");
+      const left        = parseFloat(s.match(/left:([\d.]+)%/)?.[1]  ?? 0);
+      const top         = parseFloat(s.match(/top:([\d.]+)%/)?.[1]   ?? 0);
+      const width       = parseFloat(s.match(/width:([\d.]+)%/)?.[1] ?? 10);
+      const height      = parseFloat(s.match(/height:([\d.]+)%/)?.[1]?? 10);
 
-    // 3. Read component-specific zoom level, default to 2.6
-    const zoomLevel = parseFloat(btn.dataset.zoom) || 2.6;
-    
-    // 3b. Set transform-origin on the IMAGE to that centre point,
-    //    then apply the dynamic zoom scale and add .zoomed to the wrap
-    dfdImg.style.transformOrigin = `${cx}% ${cy}%`;
-    dfdImg.style.transform = `scale(${zoomLevel})`;
-    dfdWrap.classList.add("zoomed");
+      // Centre of the hotspot in % terms
+      const cx = left + width  / 2;
+      const cy = top  + height / 2;
 
-    // 4. Track active hotspot for visual highlight (but don't show it)
-    if (activeHotspot) activeHotspot.classList.remove("active");
-    btn.classList.add("active");
-    activeHotspot = btn;
+      // 3. Read component-specific zoom level, default to 2.6
+      const zoomLevel = parseFloat(btn.dataset.zoom) || 2.6;
+      
+      // 3b. Set transform-origin on the IMAGE to that centre point,
+      //    then apply the dynamic zoom scale and add .zoomed to the wrap
+      dfdImg.style.transformOrigin = `${cx}% ${cy}%`;
+      dfdImg.style.transform = `scale(${zoomLevel})`;
+      dfdWrap.classList.add("zoomed");
 
-    // 5a. Hide ALL hotspots when zoomed to prevent view obstruction
-    document.querySelectorAll(".hotspot").forEach(hs => {
-      hs.classList.add("hidden");
+      // 4. Track active hotspot for visual highlight (but don't show it)
+      if (activeHotspot) activeHotspot.classList.remove("active");
+      btn.classList.add("active");
+      activeHotspot = btn;
+
+      // 5a. Hide ALL hotspots in this DFD when zoomed to prevent view obstruction
+      hotspots.forEach(hs => {
+        hs.classList.add("hidden");
+      });
+
+      // 5c. Show reset button
+      if (zoomReset) zoomReset.style.display = "inline-block";
     });
-
-    // 5c. Show reset button
-    zoomReset.style.display = "inline-block";
   });
-});
 
-function resetZoom() {
-  dfdWrap.classList.remove("zoomed");
-  dfdImg.style.transformOrigin = "center center";
-  dfdImg.style.transform = "scale(1)";
-  if (activeHotspot) {
-    activeHotspot.classList.remove("active");
-    activeHotspot = null;
+  function resetZoom() {
+    dfdWrap.classList.remove("zoomed");
+    dfdImg.style.transformOrigin = "center center";
+    dfdImg.style.transform = "scale(1)";
+    if (activeHotspot) {
+      activeHotspot.classList.remove("active");
+      activeHotspot = null;
+    }
+    // 5b. Show all hotspots again
+    hotspots.forEach(hs => {
+      hs.classList.remove("hidden");
+    });
+    if (zoomReset) zoomReset.style.display = "none";
   }
-  // 5b. Show all hotspots again
-  document.querySelectorAll(".hotspot").forEach(hs => {
-    hs.classList.remove("hidden");
+
+  zoomReset?.addEventListener("click", resetZoom);
+
+  // Double-click wrap background to reset
+  dfdWrap?.addEventListener("dblclick", e => {
+    if (!e.target.classList.contains("hotspot")) resetZoom();
   });
-  zoomReset.style.display = "none";
 }
 
-zoomReset?.addEventListener("click", resetZoom);
-
-// Double-click wrap background to reset
-dfdWrap?.addEventListener("dblclick", e => {
-  if (!e.target.classList.contains("hotspot")) resetZoom();
-});
+// Initialize both DFDs
+setupDfdZoom("paymentDfdWrap", "paymentDfdImg", "zoomReset");
+setupDfdZoom("mediaDfdWrap", "mediaDfdImg", "mediaZoomReset");
 
 // ─── Assumptions table ────────────────────────────────────────────────────────
 const assumptions = [
@@ -621,7 +730,7 @@ const threats = [
   },
   // ─── Media Upload Threats ─────────────────────────────────────────────────
   {
-    id: "TM-UM-01",
+    id: "T-M01",
     subsystem: "Upload Path",
     componentsAffected: "Player, API Gateway, Media Upload Service",
     dataAsset: "Upload Request",
@@ -634,7 +743,7 @@ const threats = [
     impactScore: 3,
   },
   {
-    id: "TM-UM-02",
+    id: "T-M02",
     subsystem: "Upload Path",
     componentsAffected: "Player, API Gateway, Media Upload Service, Workers",
     dataAsset: "Raw media file",
@@ -647,7 +756,7 @@ const threats = [
     impactScore: 4,
   },
   {
-    id: "TM-UM-03",
+    id: "T-M03",
     subsystem: "Upload Path",
     componentsAffected: "Player, Workers, CDN, Media Upload Service",
     dataAsset: "Raw media file",
@@ -660,7 +769,7 @@ const threats = [
     impactScore: 5,
   },
   {
-    id: "TM-UM-04",
+    id: "T-M04",
     subsystem: "Quarantine and Processing",
     componentsAffected: "Moderator, Player, Approved Bucket",
     dataAsset: "Moderation Commands",
@@ -673,7 +782,7 @@ const threats = [
     impactScore: 4,
   },
   {
-    id: "TM-UM-05",
+    id: "T-M05",
     subsystem: "Quarantine and Processing",
     componentsAffected: "Moderation Queue, Approved Bucket, CDN",
     dataAsset: "Approved media file",
@@ -686,7 +795,7 @@ const threats = [
     impactScore: 4,
   },
   {
-    id: "TM-UM-06",
+    id: "T-M06",
     subsystem: "Quarantine and Processing",
     componentsAffected: "Approved Bucket, Quarantine Bucket",
     dataAsset: "Approved media file",
@@ -867,10 +976,14 @@ function buildMatrix() {
     matrix.appendChild(el("div","mhead",`${impact.score}<div style="font-size:10px;font-weight:normal">${impact.label}</div>`));
     likelihoodLevels.forEach(likelihood => {
       const score = impact.score * likelihood.score;
-      const cell  = el("div","mcell",`${score}`);
+      // Count threats matching this impact × likelihood
+      const threatCount = threats.filter(t => 
+        t.impactScore === impact.score && t.likelihoodScore === likelihood.score
+      ).length;
+      const cell  = el("div","mcell",`${score}<div style="font-size:11px;margin-top:4px;opacity:0.8">${threatCount} threat${threatCount !== 1 ? 's' : ''}</div>`);
       cell.dataset.score      = score;
       cell.dataset.riskLevel  = getRiskLevel(score);
-      cell.title = `Impact ${impact.score} × Likelihood ${likelihood.score} = ${score} (${getRiskLevel(score)})`;
+      cell.title = `Impact ${impact.score} × Likelihood ${likelihood.score} = ${score} (${getRiskLevel(score)}) - ${threatCount} threat(s)`;
       cell.addEventListener("click", () => {
         document.querySelectorAll(".mcell").forEach(x => x.classList.remove("active"));
         cell.classList.add("active");
