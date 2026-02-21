@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Threat Modelling Connect — Group 27</title>
+  <title>Threat Modelling Connect | Group 27</title>
   <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
@@ -16,7 +16,7 @@
       <div class="badge">Group 27</div>
       <h1>Threat Modelling Connect</h1>
       <p class="sub">
-        Interactive report for our threat modelling exercise (Auth • Media Upload • Payment).
+        Interactive report covering authentication, media uploads, and payment systems.
       </p>
 
       <div class="names">
@@ -48,7 +48,7 @@
         </div>
         <div class="mini-card">
           <div class="mini-title">Focus Areas</div>
-          <div class="mini-body">Authentication • Media Upload • Payment/Marketplace</div>
+          <div class="mini-body">Authentication, Media Upload, Payment/Marketplace</div>
         </div>
       </div>
     </div>
@@ -58,7 +58,7 @@
   <header class="topbar" id="topbar">
     <div class="topbar-left">
       <div class="dot"></div>
-      <div class="topbar-title">Group 27 — Threat Modelling Connect</div>
+      <div class="topbar-title">Group 27 | Threat Modelling Connect</div>
     </div>
     <nav class="topbar-nav">
       <a href="#intro" class="navlink">Intro</a>
@@ -75,15 +75,15 @@
     <section id="intro" class="panel">
       <div class="panel-head">
         <h2>1. Introduction</h2>
-        <p class="muted">Context, executive summary, objective, scope, assumptions.</p>
+        <p class="muted">Context, executive summary, objective, scope, and assumptions.</p>
       </div>
 
       <div class="grid two">
         <article class="card">
           <h3>Context</h3>
           <p>
-            We performed threat modelling on an online browser-based multiplayer city-building game
-            and narrowed the system into manageable components for deeper analysis.
+            We performed threat modelling on an online multiplayer city-building game
+            and focused on three key areas for in-depth analysis.
           </p>
         </article>
 
@@ -101,11 +101,11 @@
         <article class="card">
           <h3>Objective</h3>
           <p>
-            The objective of this threat modelling exercise is to identify risks in the game’s system and elaborate on their business impact, followed by development of recommendations on how these risks can be mitigated to minimise said impact. We have prioritised the following goals to achieve using our threat model: 
+            This threat modelling exercise identifies risks in the game's system, assesses their business impact, and provides recommendations for mitigation. Our priorities are:
 
             <ul>
               <li>User safety</li>
-              <li>Game integrity/Fair play</li>
+              <li>Game integrity and fair play</li>
               <li>Financial integrity</li>
             </ul>
 
@@ -143,15 +143,15 @@
       <div class="card">
         <h3>Business Consideration</h3>
         <p>
-          This threat modeling exercise directly supports business continuity and risk management objectives.
-          By identifying and mitigating threats to our authentication, media upload, and payment systems, we:
+          This threat modeling exercise supports our business continuity and risk management goals.
+          By addressing threats to authentication, media uploads, and payments, we can:
         </p>
         <ul class="clean">
-          <li><b>Protect revenue streams:</b> Prevent payment fraud, unauthorized refunds, and marketplace manipulation that could result in direct financial losses.</li>
-          <li><b>Maintain user trust:</b> Safeguard user credentials and personal data to preserve our reputation and avoid costly breaches that could lead to user churn.</li>
-          <li><b>Ensure platform integrity:</b> Prevent malicious content uploads and moderation system abuse that could expose users to harmful content and regulatory penalties.</li>
-          <li><b>Reduce operational costs:</b> Minimize the impact of denial-of-service attacks and system abuse that could overwhelm infrastructure and increase operational expenses.</li>
-          <li><b>Meet compliance requirements:</b> Add security features to align with major regulations such as GDPR, focusing on user safety and privacy.</li>
+          <li><b>Protect revenue streams</b> by preventing payment fraud, unauthorized refunds, and marketplace manipulation.</li>
+          <li><b>Maintain user trust</b> by protecting credentials and personal data, preserving our reputation and reducing user churn.</li>
+          <li><b>Keep the platform safe</b> by blocking malicious content and preventing moderation abuse.</li>
+          <li><b>Reduce operational costs</b> by minimizing DoS attacks and system abuse that strain infrastructure.</li>
+          <li><b>Meet compliance requirements</b> like GDPR through proper security controls around user data and privacy.</li>
         </ul>
       </div>
     </section>
@@ -167,22 +167,22 @@
         <article class="card">
           <h3>Key Components (Focus Areas)</h3>
           <ul class="clean">
-            <li><b>Authentication Service</b> : identities, sessions, tokens</li>
-            <li><b>Media Upload Service</b> : UGC uploads, scanning, moderation</li>
-            <li><b>Payment &amp; Marketplace</b> : orders, entitlements, refunds, webhooks</li>
+            <li><b>Authentication Service</b> handles identities, sessions, and tokens</li>
+            <li><b>Media Upload Service</b> manages user content uploads, scanning, and moderation</li>
+            <li><b>Payment &amp; Marketplace</b> processes orders, entitlements, refunds, and webhooks</li>
           </ul>
           <p class="muted tiny">
-            Based on your report draft: focus areas selected due to business impact and attack surface.
+            We selected these areas based on their business impact and attack surface.
           </p>
         </article>
 
         <article class="card">
           <h3>How to Read This Report</h3>
           <ol class="clean">
-            <li>Understand risk landscape via matrix</li>
-            <li>Review DFDs and component flows</li>
-            <li>Explore detailed threats (STRIDE)</li>
-            <li>Review mitigations and remediations</li>
+            <li>Check the risk matrix to understand priorities</li>
+            <li>Review data flow diagrams and component details</li>
+            <li>Explore specific threats using STRIDE</li>
+            <li>Read through recommended mitigations</li>
           </ol>
         </article>
       </div>
@@ -391,28 +391,30 @@
       <div class="card">
         <h3>Filter</h3>
         <div class="filters">
-            <select id="strideFilter" class="select">
-              <option value="ALL">All STRIDE</option>
-              <option value="S">Spoofing</option>
-              <option value="T">Tampering</option>
-              <option value="R">Repudiation</option>
-              <option value="I">Information Disclosure</option>
-              <option value="D">Denial of Service</option>
-              <option value="E">Elevation of Privilege</option>
-            </select>
+            <div class="filter-toggle-container">
+              <select id="strideFilter" class="select">
+                <option value="ALL">All STRIDE</option>
+                <option value="S">Spoofing</option>
+                <option value="T">Tampering</option>
+                <option value="R">Repudiation</option>
+                <option value="I">Information Disclosure</option>
+                <option value="D">Denial of Service</option>
+                <option value="E">Elevation of Privilege</option>
+              </select>
+
+              <select id="linddunFilter" class="select" style="display:none;">
+                <option value="ALL">All LINDDUN</option>
+                <option value="L">L (Linkability)</option>
+                <option value="I">I (Identifiability)</option>
+                <option value="N">N (Non-repudiation)</option>
+                <option value="D">D (Detectability)</option>
+                <option value="Di">Di (Information Disclosure)</option>
+                <option value="U">U (Unawareness)</option>
+                <option value="Nc">Nc (Non-compliance)</option>
+              </select>
+            </div>
 
             <button id="privacyToggleBtn" class="btn small ghost" type="button">Privacy Lens: Off</button>
-
-            <select id="linddunFilter" class="select" style="display:none;">
-              <option value="ALL">All LINDDUN</option>
-              <option value="L">L (Linkability)</option>
-              <option value="I">I (Identifiability)</option>
-              <option value="N">N (Non-repudiation)</option>
-              <option value="D">D (Detectability)</option>
-              <option value="Di">Di (Information Disclosure)</option>
-              <option value="U">U (Unawareness)</option>
-              <option value="Nc">Nc (Non-compliance)</option>
-            </select>
 
             <select id="riskFilter" class="select">
               <option value="ALL">All Risk Levels</option>

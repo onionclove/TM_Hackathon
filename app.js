@@ -36,11 +36,11 @@ tabs.forEach(btn => {
 const componentInfo = {
   apiGateway: {
     title: "API Gateway (DMZ)",
-    meta: "Entry point + routing + rate limiting",
+    meta: "Entry point, routing, and rate limiting",
     responsibilities: [
-      "Terminates TLS and enforces basic request controls",
+      "Terminates TLS and handles basic request controls",
       "Routes /checkout, /refund, and webhook callbacks",
-      "Reduces DoS exposure by rate limiting and filtering",
+      "Reduces DoS risk through rate limiting and filtering",
     ],
     flows: [
       "Player > API Gateway: POST /checkout, POST /refund",
@@ -53,11 +53,11 @@ const componentInfo = {
   },
   marketplace: {
     title: "Marketplace Service (Internal)",
-    meta: "Order lifecycle + state machine owner",
+    meta: "Handles order lifecycle and state transitions",
     responsibilities: [
-      "Validates SKU/price via Product Catalog DB (server-side pricing)",
-      "Creates PENDING orders and updates to PAID/REFUNDED based on verified events",
-      "Triggers entitlement grants only after PAID",
+      "Validates SKU and price using the Product Catalog DB (server-side pricing)",
+      "Creates PENDING orders and updates to PAID or REFUNDED based on verified events",
+      "Triggers entitlement grants only after PAID status confirmed",
     ],
     flows: [
       "API Gateway > Marketplace: create order",
@@ -67,15 +67,15 @@ const componentInfo = {
       "Marketplace > Audit Log: append events",
     ],
     assets: ["Order state integrity", "Pricing integrity", "Refund correctness"],
-    topThreats: ["T-P03 Client-side Price Manipulation", "T-P05 Entitlement Double-Grant via Race Condition", "T-P04 Refund Abuse / Chargeback Fraud"],
+    topThreats: ["T-P03 Client-side Price Manipulation", "T-P05 Entitlement Double-Grant through Race Condition", "T-P04 Refund Abuse / Chargeback Fraud"],
   },
   paymentAdapter: {
     title: "Payment Integration Adapter (Internal)",
-    meta: "External payment interface + webhook verification",
+    meta: "Connects to external payment providers and verifies webhooks",
     responsibilities: [
-      "Creates payment intents/charges with external gateway",
-      "Receives webhook callbacks via API Gateway and verifies signature",
-      "Returns verified payment outcome to Marketplace",
+      "Creates payment intents and charges with the external gateway",
+      "Receives webhook callbacks through API Gateway and verifies signatures",
+      "Returns verified payment status to Marketplace",
     ],
     flows: [
       "Marketplace > Adapter: create payment intent",
@@ -89,27 +89,27 @@ const componentInfo = {
   },
   entitlement: {
     title: "Entitlement Service (Internal)",
-    meta: "Inventory/virtual goods grants",
+    meta: "Manages inventory and virtual goods",
     responsibilities: [
-      "Grants cosmetics/currency/boosts after PAID confirmation",
+      "Grants cosmetics, currency, and boosts after PAID confirmation",
       "Writes inventory updates to Entitlement Store",
-      "Supports revocation/adjustments for refunds/chargebacks",
+      "Handles revocation for refunds and chargebacks",
     ],
     flows: [
       "Marketplace > Entitlement Service: grant/revoke",
       "Entitlement Service > Entitlement Store: inventory update",
     ],
     assets: ["Entitlement integrity", "Player inventory correctness"],
-    topThreats: ["T-P05 Entitlement Double-Grant via Race Condition", "Unauthorized grants", "Insufficient revocation"],
+    topThreats: ["T-P05 Entitlement Double-Grant through Race Condition", "Unauthorized grants", "Insufficient revocation"],
   },
   datastores: {
     title: "Persistence & Logging Zone (Data Stores)",
-    meta: "Orders, catalog, inventory, and audit evidence",
+    meta: "Stores orders, catalog, inventory, and audit logs",
     responsibilities: [
       "Purchase DB stores order state transitions",
-      "Catalog DB is pricing source of truth",
-      "Entitlement Store holds player-owned items/currency",
-      "Audit Log preserves forensic integrity (append-only)",
+      "Catalog DB serves as the pricing source of truth",
+      "Entitlement Store tracks items and currency owned by players",
+      "Audit Log maintains forensic integrity (append-only)",
     ],
     flows: [
       "Marketplace <> Purchase DB",
@@ -121,10 +121,10 @@ const componentInfo = {
   },
   externalGateway: {
     title: "External Payment Gateway (Out of control)",
-    meta: "Third-party processor (Stripe/PayPal style)",
+    meta: "Third-party processor (Stripe or PayPal style)",
     responsibilities: [
       "Processes payment authorization and sends webhook events",
-      "Is not trusted by default, only trusted via signature verification",
+      "Not trusted by default; only trusted after signature verification",
     ],
     flows: [
       "Adapter > External Gateway: payment/refund initiation",
@@ -135,10 +135,10 @@ const componentInfo = {
   },
   secretsVault: {
     title: "Secrets Vault (Separated zone)",
-    meta: "API keys + webhook signing secrets",
+    meta: "Stores API keys and webhook signing secrets",
     responsibilities: [
       "Stores API keys and webhook signing secrets",
-      "Enforces strict access control and audit",
+      "Enforces strict access control and logging",
     ],
     flows: [
       "Payment Adapter > Secrets Vault: read API keys / webhook signing secrets",
@@ -153,7 +153,7 @@ const componentInfo = {
     responsibilities: [
       "Receives media upload requests from players",
       "Routes requests to Media Upload Service",
-      "Rate limiting and basic request validation",
+      "Applies rate limiting and basic validation",
     ],
     flows: [
       "Player > API Gateway: POST /upload with media file",
@@ -270,9 +270,9 @@ const componentInfo = {
       "Handles email/password registration with bcrypt/argon2 hashing",
       "Authenticates users and issues signed JWT tokens with role claims",
       "Orchestrates MFA verification flow (delegates to MFA Verification service)",
-      "Manages password reset flow via Email Worker",
-      "Evaluates bot/risk signals and escalates challenges via Bot/Risk Engine",
-      "Applies age/parental consent policies via Parental Consent/Policy Service",
+      "Manages password reset flow using Email Worker",
+      "Evaluates bot and risk signals and escalates challenges through Bot/Risk Engine",
+      "Applies age and parental consent policies using Parental Consent/Policy Service",
       "Writes all auth events to immutable Audit Log",
     ],
     flows: [
@@ -319,15 +319,15 @@ const componentInfo = {
       "Email Worker > Secrets Vault: read SMTP credentials",
       "External Email Provider > Player: password reset / verification email",
     ],
-    assets: ["Reset tokens (time-limited, single-use)", "SMTP credentials (via vault)", "Email content"],
-    topThreats: ["T-A03 Password Reset Token Abuse", "Reset token leakage", "Email enumeration via differing responses"],
+    assets: ["Reset tokens (time-limited, single-use)", "SMTP credentials (from vault)", "Email content"],
+    topThreats: ["T-A03 Password Reset Token Abuse", "Reset token leakage", "Email enumeration through differing responses"],
   },
   authMfaService: {
     title: "MFA Verification Service (Internal)",
     meta: "TOTP validation and SMS OTP dispatch",
     responsibilities: [
       "Validates TOTP codes against stored MFA seeds",
-      "Dispatches SMS OTP via external provider when SMS MFA is configured",
+      "Dispatches SMS OTP using external provider when SMS MFA is configured",
       "Returns verification result (pass/fail) to Auth Service",
     ],
     flows: [
@@ -640,15 +640,15 @@ setupDfdZoom("authDfdWrap", "authDfdImg", "authZoomReset");
 const assumptions = [
   {
     a: "Webhook events are signed and verified server-side",
-    r: "Architecture depends on webhooks for payment truth",
-    i: "If not verified → spoofed payment/refund events",
-    v: "Show signature verification logic + provider docs",
+    r: "Architecture relies on webhooks for payment confirmation",
+    i: "Without verification, spoofed payment/refund events possible",
+    v: "Review signature verification logic and provider docs",
   },
   {
     a: "Server-side pricing is authoritative (Catalog DB)",
     r: "Clients can tamper with request bodies",
-    i: "If trusted → underpriced purchases",
-    v: "Confirm marketplace ignores client price",
+    i: "If client price is trusted, attackers can make underpriced purchases",
+    v: "Confirm marketplace ignores client-provided price",
   },
   {
     a: "Entitlements are granted only after PAID state",
@@ -677,14 +677,14 @@ const threats = [
     dataFlow: "External Payment Gateway > API Gateway > Payment Adapter",
     stride: { S:true, T:false, R:false, I:false, D:false, E:false },
     threatName: "Webhook Spoofing",
-    threatDescription: "Attacker sends a forged webhook event to mark an order as PAID and trigger entitlement issuance without a real payment.",
-    possibleImpact: "Free entitlements, revenue loss, fraud scaling",
+    threatDescription: "Attacker sends a forged webhook event to mark an order as PAID, triggering free entitlement grants without actual payment.",
+    possibleImpact: "Free entitlements, revenue loss, and scalable fraud.",
     likelihoodScore: 4,
     impactScore: 5,
     mitigations: [
       {
         title: "HMAC Signature Verification",
-        description: "Every webhook must include an HMAC-SHA256 signature computed with a shared secret. Verify signature matches before processing.",
+        description: "Every webhook must include an HMAC-SHA256 signature computed with a shared secret. Verify the signature matches before processing.",
         priority: "CRITICAL",
       },
       {
@@ -699,7 +699,7 @@ const threats = [
       },
       {
         title: "Event Source Verification",
-        description: "Confirm webhook origin via TLS certificate pinning or IP allowlist if provider allows.",
+        description: "Confirm webhook origin through TLS certificate pinning or IP allowlist if the provider supports it.",
         priority: "MEDIUM",
       },
     ],
@@ -712,8 +712,8 @@ const threats = [
     dataFlow: "External Payment Gateway > API Gateway > Payment Adapter > Marketplace",
     stride: { S:false, T:true, R:false, I:false, D:false, E:false },
     threatName: "Webhook Replay",
-    threatDescription: "A valid webhook event is replayed to duplicate processing and re-grant entitlements if idempotency/state checks are weak.",
-    possibleImpact: "Duplicate inventory/currency grants, accounting inconsistencies",
+    threatDescription: "A valid webhook event is replayed to duplicate processing and re-grant entitlements when idempotency or state checks are weak.",
+    possibleImpact: "Duplicate inventory or currency grants, accounting errors.",
     likelihoodScore: 3,
     impactScore: 4,
     mitigations: [
@@ -747,14 +747,14 @@ const threats = [
     dataFlow: "Player > API Gateway > Marketplace Service",
     stride: { S:false, T:true, R:false, I:false, D:false, E:false },
     threatName: "Client-side Price Manipulation",
-    threatDescription: "Client tampers with item/price fields to buy goods cheaper unless server validates price using the catalog source of truth.",
-    possibleImpact: "Undervalued purchases, marketplace abuse, financial loss",
+    threatDescription: "Client tampers with item or price fields to buy goods at lower prices unless the server validates against the catalog source of truth.",
+    possibleImpact: "Undervalued purchases, marketplace abuse, and financial loss.",
     likelihoodScore: 4,
     impactScore: 4,
     mitigations: [
       {
         title: "Server-side Pricing Authority",
-        description: "Never trust client-provided prices. Always fetch current price from Catalog DB server-side on checkout.",
+        description: "Never trust client-provided prices. Always fetch the current price from Catalog DB server-side during checkout.",
         priority: "CRITICAL",
       },
       {
@@ -782,8 +782,8 @@ const threats = [
     dataFlow: "Player → API Gateway → Marketplace Service → Purchase DB → Entitlement Service",
     stride: { S:false, T:true, R:true, I:false, D:false, E:false },
     threatName: "Refund Abuse / Chargeback Fraud",
-    threatDescription: "Attacker repeatedly requests refunds or performs friendly-fraud chargebacks after receiving entitlements, exploiting weak refund validation, missing cooldowns, or poor evidence retention.",
-    possibleImpact: "Direct revenue leakage, repeated entitlement rollback overhead, inflated support burden, and abuse of in-game economy.",
+    threatDescription: "Attacker repeatedly requests refunds or files friendly-fraud chargebacks after receiving entitlements, exploiting weak validation, missing cooldowns, or poor record-keeping.",
+    possibleImpact: "Direct revenue loss, overhead from entitlement rollbacks, higher support costs, and abuse of the in-game economy.",
     linddunCategories: ["L", "N", "Nc"],
     personalData: "Purchase history, account identifiers, device/payment risk signals, refund history",
     privacyImpact: "Over-collection of anti-fraud telemetry can profile user spending behavior and increase compliance risk if retained excessively.",
@@ -824,7 +824,7 @@ const threats = [
     dataAsset: "Order state and entitlement grant consistency",
     dataFlow: "Marketplace Service ↔ Purchase DB ↔ Entitlement Service",
     stride: { S:false, T:true, R:false, I:false, D:false, E:true },
-    threatName: "Entitlement Double-Grant via Race Condition",
+    threatName: "Entitlement Double-Grant through Race Condition",
     threatDescription: "Concurrent processing of checkout/webhook events causes the same paid order to be finalized more than once, granting duplicate inventory or currency before idempotency checks complete.",
     possibleImpact: "Duplicate item/currency issuance, economy inflation, and potential abuse chaining with resale or refund fraud.",
     linddunCategories: ["L", "Di", "Nc"],
@@ -912,11 +912,11 @@ const threats = [
     dataFlow: "Player → API Gateway → Auth Service → Auth DB",
     stride: { S:true, T:false, R:false, I:false, D:false, E:false },
     threatName: "Credential Stuffing / Brute Force",
-    threatDescription: "Attacker uses automated tools with leaked credential lists to attempt mass login (A1 — login ingress). Without adequate rate limiting, account lockout, and Bot/Risk Engine challenge escalation, valid accounts can be compromised at scale.",
-    possibleImpact: "Mass account takeover, financial loss via in-game marketplace purchases, reputation damage, potential harm to minor accounts whose credentials are reused.",
+    threatDescription: "Attacker uses automated tools with leaked credential lists to attempt mass logins (A1 ingress). Without adequate rate limiting, account lockout, and bot challenge escalation, accounts can be compromised at scale.",
+    possibleImpact: "Mass account takeover, financial loss from marketplace purchases, reputation damage, and potential harm to minors who reuse passwords.",
     linddunCategories: ["L", "I", "Di", "Nc"],
     personalData: "Account identifiers, email, login metadata, credential exposure indicators",
-    privacyImpact: "Cross-account linkability and account identifiability increase risk of profiling and unauthorized account targeting.",
+    privacyImpact: "Cross-account linking and identification increase the risk of profiling and unauthorized targeting.",
     privacyControls: [
       "Anomaly detection for credential stuffing patterns",
       "Minimize retained login telemetry and apply retention limits",
@@ -927,12 +927,12 @@ const threats = [
     mitigations: [
       {
         title: "Rate Limiting & Account Lockout",
-        description: "Enforce max 5 failed login attempts per minute per account. Lock for 15 min after threshold. Apply per-IP and per-account limits.",
+        description: "Enforce max 5 failed login attempts per minute per account. Lock for 15 minutes after hitting the threshold. Apply per-IP and per-account limits.",
         priority: "CRITICAL",
       },
       {
         title: "Bot/Risk Engine CAPTCHA Escalation",
-        description: "Trigger CAPTCHA or step-up challenge via Bot/Risk Engine upon suspicious login patterns or velocity anomalies.",
+        description: "Trigger CAPTCHA or step-up challenge through the Bot/Risk Engine when detecting suspicious login patterns or velocity spikes.",
         priority: "CRITICAL",
       },
       {
@@ -960,14 +960,14 @@ const threats = [
     dataFlow: "Auth Service → Secrets Vault (read key) → API Gateway → Player (JWT)",
     stride: { S:true, T:true, R:false, I:false, D:false, E:true },
     threatName: "JWT Token Forgery / Key Compromise",
-    threatDescription: "If the JWT signing key is leaked from the Secrets Vault (A4 — vault read edge) or a weak algorithm (e.g. HS256 with guessable secret) is used, an attacker can forge valid JWT tokens with arbitrary role claims, including admin/moderator privileges.",
-    possibleImpact: "Complete identity spoofing, privilege escalation to admin/moderator roles, unauthorized access to all game services that trust the JWT.",
+    threatDescription: "If the JWT signing key leaks from the Secrets Vault (A4 read edge) or a weak algorithm like HS256 with a guessable secret is used, an attacker can forge valid JWT tokens with arbitrary role claims, including admin or moderator privileges.",
+    possibleImpact: "Complete identity spoofing, privilege escalation to admin roles, and unauthorized access to all game services that trust the JWT.",
     likelihoodScore: 2,
     impactScore: 5,
     mitigations: [
       {
         title: "RS256/ES256 Algorithm Enforcement",
-        description: "Use asymmetric signing (RS256 or ES256). Reject tokens signed with HS256 or 'none'. Validate algorithm header explicitly.",
+        description: "Use asymmetric signing (RS256 or ES256). Reject tokens signed with HS256 or 'none'. Validate the algorithm header explicitly.",
         priority: "CRITICAL",
       },
       {
@@ -1000,8 +1000,8 @@ const threats = [
     dataFlow: "Player → API Gateway → Auth Service → Email Worker → External Email Provider → Player",
     stride: { S:true, T:false, R:false, I:true, D:false, E:false },
     threatName: "Password Reset Token Abuse",
-    threatDescription: "Attacker exploits the password reset flow (A3 — email external edge) by intercepting reset emails, exploiting predictable/reusable reset tokens, or using email enumeration via differing server responses to identify registered accounts.",
-    possibleImpact: "Account takeover, PII exposure, potential targeting of minor accounts, chain to financial abuse via marketplace.",
+    threatDescription: "Attacker exploits the password reset flow (A3 email edge) by intercepting reset emails, exploiting predictable or reusable tokens, or using email enumeration through different server responses to identify registered accounts.",
+    possibleImpact: "Account takeover, PII exposure, potential targeting of minors, and chain attacks using marketplace access.",
     likelihoodScore: 3,
     impactScore: 4,
     mitigations: [
@@ -1040,19 +1040,19 @@ const threats = [
     dataFlow: "Player → API Gateway → Auth Service → MFA Verification → External MFA/SMS Provider",
     stride: { S:true, T:false, R:false, I:false, D:false, E:true },
     threatName: "MFA Bypass / Downgrade",
-    threatDescription: "Attacker bypasses MFA (A2 — MFA external edge) by exploiting implementation flaws: skipping the MFA step by directly calling post-auth endpoints, downgrading to a weaker factor, or intercepting SMS OTP via SIM swapping.",
-    possibleImpact: "Account takeover despite MFA being enabled, undermines the strongest layer of account protection, high-value accounts (with marketplace purchases) are prime targets.",
+    threatDescription: "Attacker bypasses MFA (A2 external edge) by exploiting implementation flaws: skipping the MFA step by calling post-auth endpoints directly, downgrading to a weaker factor, or intercepting SMS OTP through SIM swapping.",
+    possibleImpact: "Account takeover despite MFA being enabled, undermines the strongest account protection layer. High-value accounts with marketplace purchases are prime targets.",
     likelihoodScore: 3,
     impactScore: 5,
     mitigations: [
       {
         title: "Server-side MFA State Enforcement",
-        description: "Track MFA completion server-side. Ensure no endpoint grants full session without confirmed MFA pass.",
+        description: "Track MFA completion server-side. No endpoint should grant full session access without confirmed MFA verification.",
         priority: "CRITICAL",
       },
       {
         title: "No Step-Skip Endpoints",
-        description: "Audit all post-auth endpoints to require MFA-verified session tokens. No bypass via direct API calls.",
+        description: "Audit all post-auth endpoints to require MFA-verified session tokens. No bypass through direct API calls.",
         priority: "CRITICAL",
       },
       {
@@ -1080,7 +1080,7 @@ const threats = [
     dataFlow: "API Gateway → Player (JWT/cookie) // Player → API Gateway (subsequent requests)",
     stride: { S:true, T:false, R:false, I:true, D:false, E:false },
     threatName: "Session Hijacking / Token Theft",
-    threatDescription: "Attacker steals a valid session token or JWT (A5 — refresh replay surface) via XSS, network sniffing (if TLS misconfigured), or malicious browser extension. The stolen token grants full access to the victim's account for the token lifetime.",
+    threatDescription: "Attacker steals a valid session token or JWT (A5 replay surface) through XSS, network sniffing (if TLS is misconfigured), or malicious browser extensions. The stolen token grants full access to the victim's account during the token lifetime.",
     possibleImpact: "Impersonation of the victim, access to PII and game state, ability to make marketplace purchases, chat as the victim, or upload content under their identity.",
     likelihoodScore: 3,
     impactScore: 4,
@@ -1092,7 +1092,7 @@ const threats = [
       },
       {
         title: "Secure Cookie Flags",
-        description: "Set HttpOnly, Secure, SameSite=Strict on all session cookies to prevent JS access and CSRF.",
+        description: "Set HttpOnly, Secure, and SameSite=Strict on all session cookies to prevent JS access and CSRF.",
         priority: "CRITICAL",
       },
       {
@@ -1142,7 +1142,7 @@ const threats = [
       },
       {
         title: "CAPTCHA on Repeated Failures",
-        description: "Escalate to CAPTCHA challenge via Bot/Risk Engine after repeated failures from the same IP.",
+        description: "Escalate to CAPTCHA challenge through Bot/Risk Engine after repeated failures from the same IP.",
         priority: "HIGH",
       },
       {
@@ -1200,8 +1200,8 @@ const threats = [
     dataFlow: "Auth Service → Auth DB (internal)",
     stride: { S:false, T:true, R:false, I:true, D:false, E:true },
     threatName: "Auth Database Compromise",
-    threatDescription: "Attacker gains unauthorized access to the Auth DB through SQL injection, misconfigured access controls, or lateral movement (A8 — audit integrity surface). Even with hashed passwords, MFA seeds and session metadata are immediately usable for account takeover.",
-    possibleImpact: "Mass credential exposure (offline cracking of hashes), MFA bypass using stolen TOTP seeds, session hijacking via stolen refresh tokens, complete platform compromise.",
+    threatDescription: "Attacker gains unauthorized access to the Auth DB through SQL injection, misconfigured access controls, or lateral movement (A8 audit integrity surface). Even with hashed passwords, MFA seeds and session metadata are immediately usable for account takeover.",
+    possibleImpact: "Mass credential exposure (offline cracking of hashes), MFA bypass using stolen TOTP seeds, session hijacking with stolen refresh tokens, and complete platform compromise.",
     likelihoodScore: 2,
     impactScore: 5,
     mitigations: [
@@ -1241,8 +1241,8 @@ const threats = [
     dataFlow: "Player → API Gateway (Upload Request)",
     stride: { S:true, T:false, R:false, I:false, D:false, E:false },
     threatName: "Account Upload Impersonation",
-    threatDescription: "Attacker uses stolen or forged JWT authentication token to upload media under another user's identity.",
-    possibleImpact: "Reputation damage to the impersonated user, may be chained with repudiation attacks to cause further disruption and damage. May result in false moderation actions against the impersonated user.",
+    threatDescription: "Attacker uses a stolen or forged JWT authentication token to upload media under another user's identity.",
+    possibleImpact: "Reputation damage to the impersonated user, possible chaining with repudiation attacks for further disruption. May result in false moderation actions against the victim.",
     linddunCategories: ["I", "N", "Di"],
     personalData: "User account identity, uploader attribution, moderation audit identity fields",
     privacyImpact: "Misattribution of uploads exposes identity data and can reveal user behavior to unauthorized parties.",
@@ -1274,8 +1274,8 @@ const threats = [
     dataFlow: "Player → API Gateway (File Upload)",
     stride: { S:false, T:false, R:false, I:false, D:true, E:false },
     threatName: "File Upload Flooding",
-    threatDescription: "Attacker or attackers upload a large quantity of data to the site to overwhelm a component of the upload service, such as by exhausting worker capacity or API gateway bandwidth.",
-    possibleImpact: "Upload service stops working, which causes disruptions to profile updates, mod development, other aspects requiring media upload.",
+    threatDescription: "Attacker or multiple attackers upload large amounts of data to overwhelm the upload service, exhausting worker capacity or API gateway bandwidth.",
+    possibleImpact: "Upload service becomes unavailable, disrupting profile updates, mod development, and other features requiring media uploads.",
     likelihoodScore: 5,
     impactScore: 4,
     mitigations: [
@@ -1304,8 +1304,8 @@ const threats = [
     dataFlow: "Player → API Gateway (File Upload) // Player → CDN (Read)",
     stride: { S:false, T:true, R:false, I:false, D:false, E:true },
     threatName: "Polyglot File Upload",
-    threatDescription: "Attacker uploads a polyglot image/javascript file that executes a malicious payload upon viewing. This bypasses validation measures and is interpreted by browsers as executable code leading to XSS.",
-    possibleImpact: "Users reading the malicious media (such as by viewing a profile picture) may be executing attacker-controlled code, which leads to client-side ramifications such as token or session theft as well as malicious content display. If triggered in workers, also leads to RCE in the infrastructure itself with potential lateral movement or data exfiltration.",
+    threatDescription: "Attacker uploads a polyglot image/javascript file that executes a malicious payload when viewed. This bypasses validation and is interpreted by browsers as executable code, leading to XSS.",
+    possibleImpact: "Users viewing the malicious media (such as a profile picture) may execute attacker-controlled code, leading to token theft, session hijacking, and malicious content display. If triggered in workers, this can lead to RCE in the infrastructure with potential lateral movement or data exfiltration.",
     likelihoodScore: 3,
     impactScore: 5,
     mitigations: [
@@ -1334,8 +1334,8 @@ const threats = [
     dataFlow: "Moderator → Moderation tools → Moderation Queue",
     stride: { S:true, T:false, R:false, I:false, D:false, E:true },
     threatName: "Moderator impersonation",
-    threatDescription: "Attacker steals a moderator's session, granting them moderator privileges over content uploaded to the site.",
-    possibleImpact: "Attacker may selectively allow certain users' uploads to go through while blocking others, damaging integrity. They may also upload further malicious files by abusing their moderator privileges to allow malicious-flagged files through.",
+    threatDescription: "Attacker steals a moderator's session, granting them moderator privileges over uploaded content.",
+    possibleImpact: "Attacker can selectively allow or block uploads, damaging platform integrity. They can also abuse moderator privileges to approve malicious files.",
     likelihoodScore: 2,
     impactScore: 4,
     mitigations: [
@@ -1359,14 +1359,14 @@ const threats = [
     dataFlow: "Moderator → Moderation tools → Moderation Queue",
     stride: { S:false, T:false, R:true, I:false, D:false, E:false },
     threatName: "Moderator repudiation",
-    threatDescription: "A malicious or hijacked moderator denies that they approved a malicious media file to be stored in the approved file bucket and there is no way for the system to prove otherwise.",
-    possibleImpact: "If unsafe content is released onto the site, there is the obvious risk of harm to users on the site through display of inappropriate or inflammatory content. If moderators cannot ascertain who approved said content, there is no accountability and repeated offenses may occur.",
+    threatDescription: "A malicious or hijacked moderator denies approving a malicious media file, and there's no way for the system to prove otherwise.",
+    possibleImpact: "If unsafe content is published, users face risk of harm through inappropriate or inflammatory content. Without accountability, repeated offenses may occur.",
     likelihoodScore: 2,
     impactScore: 4,
     mitigations: [
       {
         title: "Audit Logging",
-        description: "Log all moderator actions (approvals, rejections) with timestamps and moderator ID in immutable audit log.",
+        description: "Log all moderator actions (approvals, rejections) with timestamps and moderator ID in an immutable audit log.",
         priority: "CRITICAL",
       },
       {
@@ -1384,8 +1384,8 @@ const threats = [
     dataFlow: "Approved Bucket → CDN → User",
     stride: { S:false, T:false, R:false, I:true, D:false, E:false },
     threatName: "Bucket Exposure",
-    threatDescription: "Misconfiguration in approval or storage bucket leads to public read access. Users can access media files in processing without authorisation.",
-    possibleImpact: "Approved bucket leakage may lead to financial loss to the company through scraping of assets locked behind paywalls or IP theft. Quarantine bucket leakage may cause users to inadvertently download harmful/malicious files still on the site. Potential harm to minors who may be tricked into downloading inappropriate content.",
+    threatDescription: "Misconfiguration in approval or storage buckets leads to public read access. Users can access media files still in processing without authorization.",
+    possibleImpact: "Approved bucket leakage may cause financial loss through scraping of paid assets or IP theft. Quarantine bucket leakage may allow users to download harmful files. Potential harm to minors who may be tricked into downloading inappropriate content.",
     linddunCategories: ["L", "I", "D", "Di", "U", "Nc"],
     personalData: "User-generated media, uploader metadata, moderation status, potentially minor-related content",
     privacyImpact: "Unauthorized reads can expose identifiable user content and make user activity detectable and linkable.",
@@ -1399,7 +1399,7 @@ const threats = [
     mitigations: [
       {
         title: "Bucket Permissions",
-        description: "Ensure storage buckets are private by default. Use IAM policies with least privilege access.",
+        description: "Make storage buckets private by default. Use IAM policies with least privilege access.",
         priority: "CRITICAL",
       },
       {

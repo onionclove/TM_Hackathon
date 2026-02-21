@@ -423,6 +423,8 @@ code { font-family: var(--mono); font-size: .95em }
 /* ── Filters ── */
 .filters { display: grid; gap: 10px }
 @media (min-width: 650px) { .filters { grid-template-columns: 1fr 1fr 1.4fr } }
+.filter-toggle-container { position: relative; width: 100% }
+.filter-toggle-container .select { width: 100%; position: relative }
 .select, .input {
   width: 100%;
   padding: 10px 12px;
