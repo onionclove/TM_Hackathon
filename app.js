@@ -49,7 +49,7 @@ const componentInfo = {
       "API Gateway > Payment Adapter: forward webhook",
     ],
     assets: ["Auth tokens", "Order IDs", "Webhook events (integrity-critical)"],
-    topThreats: ["T-P01 Webhook Spoofing", "T-P06 Checkout DoS", "T-P07 Webhook Flood DoS"],
+    topThreats: ["T-P01 Webhook Spoofing", "T-P06 Carding Bot Flood", "T-P02 Webhook Replay"],
   },
   marketplace: {
     title: "Marketplace Service (Internal)",
@@ -67,7 +67,7 @@ const componentInfo = {
       "Marketplace > Audit Log: append events",
     ],
     assets: ["Order state integrity", "Pricing integrity", "Refund correctness"],
-    topThreats: ["T-P03 Client-side tampering (if pricing trusted)", "Race conditions / double-issue", "Refund abuse"],
+    topThreats: ["T-P03 Client-side Price Manipulation", "T-P05 Entitlement Double-Grant via Race Condition", "T-P04 Refund Abuse / Chargeback Fraud"],
   },
   paymentAdapter: {
     title: "Payment Integration Adapter (Internal)",
@@ -85,7 +85,7 @@ const componentInfo = {
       "Adapter > Secrets Vault: read API keys/webhook secrets",
     ],
     assets: ["Webhook authenticity", "Provider txn IDs", "API keys (indirectly)"],
-    topThreats: ["T-P01 Webhook spoofing", "T-P02 Webhook replay", "Secret misuse"],
+    topThreats: ["T-P01 Webhook Spoofing", "T-P02 Webhook Replay", "T-P06 Carding Bot Flood"],
   },
   entitlement: {
     title: "Entitlement Service (Internal)",
@@ -100,7 +100,7 @@ const componentInfo = {
       "Entitlement Service > Entitlement Store: inventory update",
     ],
     assets: ["Entitlement integrity", "Player inventory correctness"],
-    topThreats: ["Unauthorized grants", "Double-issue", "Insufficient revocation"],
+    topThreats: ["T-P05 Entitlement Double-Grant via Race Condition", "Unauthorized grants", "Insufficient revocation"],
   },
   datastores: {
     title: "Persistence & Logging Zone (Data Stores)",
@@ -117,7 +117,7 @@ const componentInfo = {
       "Marketplace > Audit Log",
     ],
     assets: ["Financial records", "Inventory integrity", "Non-repudiation evidence"],
-    topThreats: ["DB tampering", "Audit log deletion", "Broken authZ to read purchases"],
+    topThreats: ["T-P04 Refund Abuse / Chargeback Fraud", "DB tampering", "Audit log deletion"],
   },
   externalGateway: {
     title: "External Payment Gateway (Out of control)",
@@ -131,7 +131,7 @@ const componentInfo = {
       "External Gateway > API Gateway: signed webhook callback",
     ],
     assets: ["Provider transaction IDs", "Webhook event signatures"],
-    topThreats: ["Event spoofing if signatures not verified", "Availability dependence"],
+    topThreats: ["T-P01 Webhook Spoofing", "T-P06 Carding Bot Flood", "Availability dependence"],
   },
   secretsVault: {
     title: "Secrets Vault (Separated zone)",
@@ -774,6 +774,135 @@ const threats = [
       },
     ],
   },
+  {
+    id: "T-P04",
+    subsystem: "Payment & Marketplace",
+    componentsAffected: "Marketplace Service, Purchase DB, Entitlement Service, Audit Log",
+    dataAsset: "Refund eligibility records / chargeback evidence",
+    dataFlow: "Player → API Gateway → Marketplace Service → Purchase DB → Entitlement Service",
+    stride: { S:false, T:true, R:true, I:false, D:false, E:false },
+    threatName: "Refund Abuse / Chargeback Fraud",
+    threatDescription: "Attacker repeatedly requests refunds or performs friendly-fraud chargebacks after receiving entitlements, exploiting weak refund validation, missing cooldowns, or poor evidence retention.",
+    possibleImpact: "Direct revenue leakage, repeated entitlement rollback overhead, inflated support burden, and abuse of in-game economy.",
+    linddunCategories: ["L", "N", "Nc"],
+    personalData: "Purchase history, account identifiers, device/payment risk signals, refund history",
+    privacyImpact: "Over-collection of anti-fraud telemetry can profile user spending behavior and increase compliance risk if retained excessively.",
+    privacyControls: [
+      "Data minimization for fraud telemetry with strict retention windows",
+      "Pseudonymize device and behavioral anti-fraud signals",
+      "Role-based access controls for refund investigation data",
+    ],
+    likelihoodScore: 3,
+    impactScore: 4,
+    mitigations: [
+      {
+        title: "Refund Eligibility Policy Enforcement",
+        description: "Allow refunds only for non-consumed or clearly revocable entitlements. Block repeated refund patterns on the same account/order.",
+        priority: "CRITICAL",
+      },
+      {
+        title: "Chargeback Correlation & Cooldown",
+        description: "Correlate chargeback events with prior refunds and enforce cooldown periods before high-value repurchases.",
+        priority: "HIGH",
+      },
+      {
+        title: "Immutable Refund Audit Trail",
+        description: "Write refund decisions and evidence to append-only audit logs to support disputes and anti-fraud investigations.",
+        priority: "HIGH",
+      },
+      {
+        title: "Risk-based Step-up Checks",
+        description: "Require additional verification for anomalous refund requests (new device, geo mismatch, high-value basket).",
+        priority: "MEDIUM",
+      },
+    ],
+  },
+  {
+    id: "T-P05",
+    subsystem: "Payment & Marketplace",
+    componentsAffected: "Marketplace Service, Entitlement Service, Purchase DB",
+    dataAsset: "Order state and entitlement grant consistency",
+    dataFlow: "Marketplace Service ↔ Purchase DB ↔ Entitlement Service",
+    stride: { S:false, T:true, R:false, I:false, D:false, E:true },
+    threatName: "Entitlement Double-Grant via Race Condition",
+    threatDescription: "Concurrent processing of checkout/webhook events causes the same paid order to be finalized more than once, granting duplicate inventory or currency before idempotency checks complete.",
+    possibleImpact: "Duplicate item/currency issuance, economy inflation, and potential abuse chaining with resale or refund fraud.",
+    linddunCategories: ["L", "Di", "Nc"],
+    personalData: "Order identifiers, account purchase records, entitlement ownership history",
+    privacyImpact: "Inconsistent entitlement state can leak purchase behavior and expose sensitive account transaction metadata to support/admin workflows.",
+    privacyControls: [
+      "Least-privilege access to entitlement and transaction history views",
+      "Mask non-essential transaction identifiers in operational dashboards",
+      "Retention limits for detailed event-level processing logs",
+    ],
+    likelihoodScore: 3,
+    impactScore: 5,
+    mitigations: [
+      {
+        title: "Exactly-once Finalization",
+        description: "Use unique constraints on order finalization and entitlement grant records so duplicate processing fails safely.",
+        priority: "CRITICAL",
+      },
+      {
+        title: "Idempotent Entitlement API",
+        description: "Require idempotency keys keyed by order ID for all grant/revoke operations in Entitlement Service.",
+        priority: "CRITICAL",
+      },
+      {
+        title: "Transactional Outbox Pattern",
+        description: "Publish entitlement events from committed order state changes only, preventing out-of-sync side effects.",
+        priority: "HIGH",
+      },
+      {
+        title: "Concurrency-safe State Machine",
+        description: "Enforce strict order state transitions (PENDING → PAID once) with optimistic lock/version checks.",
+        priority: "HIGH",
+      },
+    ],
+  },
+  {
+    id: "T-P06",
+    subsystem: "Payment & Marketplace",
+    componentsAffected: "API Gateway, Marketplace Service, Payment Integration Adapter, External Payment Gateway",
+    dataAsset: "Checkout endpoint availability / payment instrument metadata",
+    dataFlow: "Player/Botnet → API Gateway → Marketplace Service → Payment Integration Adapter → External Gateway",
+    stride: { S:true, T:false, R:false, I:false, D:true, E:false },
+    threatName: "Carding Bot Flood on Checkout",
+    threatDescription: "Automated bots submit high-volume stolen-card checkout attempts to validate card data, causing gateway decline spikes, fraud costs, and service degradation for legitimate players.",
+    possibleImpact: "Payment processor penalties, degraded checkout success for valid users, increased fraud operations cost, and potential temporary merchant account restrictions.",
+    linddunCategories: ["I", "L", "Nc"],
+    personalData: "Payment token metadata, IP/device fingerprints, account identifiers, checkout telemetry",
+    privacyImpact: "Aggressive anti-carding monitoring can increase identifiability and cross-session linkability if telemetry is over-retained.",
+    privacyControls: [
+      "Purpose-limited collection of anti-fraud telemetry",
+      "Pseudonymized storage of device fingerprint data",
+      "Short retention and restricted access for raw payment risk logs",
+    ],
+    likelihoodScore: 4,
+    impactScore: 4,
+    mitigations: [
+      {
+        title: "Velocity & BIN-based Rate Controls",
+        description: "Rate limit by account, IP, device fingerprint, and card BIN patterns with adaptive throttling on abnormal decline bursts.",
+        priority: "CRITICAL",
+      },
+      {
+        title: "Risk-based Step-up (3DS/CAPTCHA)",
+        description: "Require step-up verification for high-risk payment attempts before creating provider charges.",
+        priority: "CRITICAL",
+      },
+      {
+        title: "Checkout Queue Isolation",
+        description: "Isolate suspicious traffic in a separate queue to preserve checkout capacity for trusted sessions.",
+        priority: "HIGH",
+      },
+      {
+        title: "Fraud Signal Sharing with Gateway",
+        description: "Forward internal risk scores and consume gateway fraud feedback loops for near-real-time policy tuning.",
+        priority: "HIGH",
+      },
+    ],
+  },
   // ─── Authentication & Identity Threats ──────────────────────────────────
   {
     id: "T-A01",
@@ -785,6 +914,14 @@ const threats = [
     threatName: "Credential Stuffing / Brute Force",
     threatDescription: "Attacker uses automated tools with leaked credential lists to attempt mass login (A1 — login ingress). Without adequate rate limiting, account lockout, and Bot/Risk Engine challenge escalation, valid accounts can be compromised at scale.",
     possibleImpact: "Mass account takeover, financial loss via in-game marketplace purchases, reputation damage, potential harm to minor accounts whose credentials are reused.",
+    linddunCategories: ["L", "I", "Di", "Nc"],
+    personalData: "Account identifiers, email, login metadata, credential exposure indicators",
+    privacyImpact: "Cross-account linkability and account identifiability increase risk of profiling and unauthorized account targeting.",
+    privacyControls: [
+      "Anomaly detection for credential stuffing patterns",
+      "Minimize retained login telemetry and apply retention limits",
+      "Pseudonymize risk analytics data used for bot detection",
+    ],
     likelihoodScore: 5,
     impactScore: 4,
     mitigations: [
@@ -1106,6 +1243,14 @@ const threats = [
     threatName: "Account Upload Impersonation",
     threatDescription: "Attacker uses stolen or forged JWT authentication token to upload media under another user's identity.",
     possibleImpact: "Reputation damage to the impersonated user, may be chained with repudiation attacks to cause further disruption and damage. May result in false moderation actions against the impersonated user.",
+    linddunCategories: ["I", "N", "Di"],
+    personalData: "User account identity, uploader attribution, moderation audit identity fields",
+    privacyImpact: "Misattribution of uploads exposes identity data and can reveal user behavior to unauthorized parties.",
+    privacyControls: [
+      "Strong session binding and token replay protection",
+      "Immutable upload attribution logs with tamper detection",
+      "Role-based access to uploader identity fields",
+    ],
     likelihoodScore: 3,
     impactScore: 3,
     mitigations: [
@@ -1241,6 +1386,14 @@ const threats = [
     threatName: "Bucket Exposure",
     threatDescription: "Misconfiguration in approval or storage bucket leads to public read access. Users can access media files in processing without authorisation.",
     possibleImpact: "Approved bucket leakage may lead to financial loss to the company through scraping of assets locked behind paywalls or IP theft. Quarantine bucket leakage may cause users to inadvertently download harmful/malicious files still on the site. Potential harm to minors who may be tricked into downloading inappropriate content.",
+    linddunCategories: ["L", "I", "D", "Di", "U", "Nc"],
+    personalData: "User-generated media, uploader metadata, moderation status, potentially minor-related content",
+    privacyImpact: "Unauthorized reads can expose identifiable user content and make user activity detectable and linkable.",
+    privacyControls: [
+      "Private-by-default storage policy and continuous bucket posture checks",
+      "Time-bound signed URLs and strict object-level authorization",
+      "Data classification and privacy incident alerting on abnormal reads",
+    ],
     likelihoodScore: 4,
     impactScore: 4,
     mitigations: [
@@ -1267,8 +1420,13 @@ const threats = [
 // ─── Threat table ─────────────────────────────────────────────────────────────
 const strideFilter     = document.getElementById("strideFilter");
 const riskFilter       = document.getElementById("riskFilter");
+const linddunFilter    = document.getElementById("linddunFilter");
+const privacyToggleBtn = document.getElementById("privacyToggleBtn");
 const searchThreats    = document.getElementById("searchThreats");
+const threatTable      = document.getElementById("threatTable");
+const privacyTable     = document.getElementById("privacyTable");
 const threatTableBody  = document.querySelector("#threatTable tbody");
+const privacyTableBody = document.querySelector("#privacyTable tbody");
 const threatDetail     = document.getElementById("threatDetail");
 
 // Pagination / sorting elements
@@ -1279,7 +1437,9 @@ const threatPageNum    = document.getElementById('threatPageNum');
 const threatPageTotal  = document.getElementById('threatPageTotal');
 
 let currentThreatPage = 1;
+let privacyMode = false;
 const THREATS_PAGE_SIZE = 8;
+const LINDDUN_VALUES = ["L", "I", "N", "D", "Di", "U", "Nc"];
 
 function getRiskLevel(score) {
   if (score <= 4)  return "Acceptable";
@@ -1290,24 +1450,60 @@ function getRiskLevel(score) {
 
 function xmark(on) { return on ? "✗" : "" }
 
+function normalizeLinddun(threat) {
+  const categories = Array.isArray(threat?.linddunCategories) ? threat.linddunCategories : [];
+  const validCats = [...new Set(categories.filter(cat => LINDDUN_VALUES.includes(cat)))];
+  return {
+    linddunCategories: validCats,
+    personalData: threat?.personalData || "Not specified",
+    privacyImpact: threat?.privacyImpact || "Not specified",
+    privacyControls: Array.isArray(threat?.privacyControls) ? threat.privacyControls.filter(Boolean) : [],
+  };
+}
+
+function getActiveLinddunCats(threat) {
+  return normalizeLinddun(threat).linddunCategories;
+}
+
+function linddunTagString(threat) {
+  const cats = getActiveLinddunCats(threat);
+  return cats.length ? cats.join(", ") : "—";
+}
+
+function setPrivacyMode(on) {
+  privacyMode = !!on;
+  if (privacyToggleBtn) privacyToggleBtn.textContent = `Privacy Lens: ${privacyMode ? "On" : "Off"}`;
+  if (linddunFilter) linddunFilter.style.display = privacyMode ? "" : "none";
+  if (strideFilter) strideFilter.style.display = privacyMode ? "none" : "";
+  if (threatTable) threatTable.style.display = privacyMode ? "none" : "";
+  if (privacyTable) privacyTable.style.display = privacyMode ? "" : "none";
+  currentThreatPage = 1;
+  refreshThreatTable();
+}
+
 function refreshThreatTable() {
   const q              = (searchThreats.value || "").trim().toLowerCase();
   const strideVal      = strideFilter.value;
   const riskLevelVal   = riskFilter.value;
+  const linddunVal     = (linddunFilter && linddunFilter.value) || "ALL";
 
   // Reset to first page when filters/search change
   // (caller typically takes care of this, but safe-guard here)
   if (!currentThreatPage) currentThreatPage = 1;
 
   const rows = threats.filter(t => {
+    const linddun = normalizeLinddun(t);
     const okQ = !q || [
       t.id, t.subsystem, t.componentsAffected, t.dataAsset,
       t.dataFlow, t.threatName, t.threatDescription, t.possibleImpact,
+      linddunTagString(t), linddun.personalData, linddun.privacyImpact, linddun.privacyControls.join(" "),
     ].some(f => f.toLowerCase().includes(q));
 
-    const okStride    = strideVal    === "ALL" || t.stride[strideVal];
+    const activeCats  = linddun.linddunCategories;
+    const okStride    = privacyMode ? true : (strideVal === "ALL" || t.stride[strideVal]);
+    const okLinddun   = !privacyMode ? true : (linddunVal === "ALL" ? activeCats.length > 0 : activeCats.includes(linddunVal));
     const okRisk      = riskLevelVal === "ALL" || getRiskLevel(t.likelihoodScore * t.impactScore) === riskLevelVal;
-    return okQ && okStride && okRisk;
+    return okQ && okStride && okLinddun && okRisk;
   });
 
   // Sorting
@@ -1326,31 +1522,52 @@ function refreshThreatTable() {
   const start = (currentThreatPage - 1) * THREATS_PAGE_SIZE;
   const pageRows = rows.slice(start, start + THREATS_PAGE_SIZE);
 
-  threatTableBody.innerHTML = pageRows.map(t => `
-    <tr data-id="${t.id}">
-      <td><b>${t.id}</b></td>
-      <td>${t.subsystem}</td>
-      <td>${t.componentsAffected}</td>
-      <td>${t.dataAsset}</td>
-      <td>${t.dataFlow}</td>
-      <td>${xmark(t.stride.S)}</td>
-      <td>${xmark(t.stride.T)}</td>
-      <td>${xmark(t.stride.R)}</td>
-      <td>${xmark(t.stride.I)}</td>
-      <td>${xmark(t.stride.D)}</td>
-      <td>${xmark(t.stride.E)}</td>
-      <td>${t.threatName}</td>
-      <td>${t.threatDescription}</td>
-      <td>${t.possibleImpact}</td>
-      <td>${t.likelihoodScore}</td>
-      <td>${t.impactScore}</td>
-    </tr>
-  `).join("");
+  if (privacyMode) {
+    privacyTableBody.innerHTML = pageRows.map(t => {
+      const linddun = normalizeLinddun(t);
+      return `
+        <tr data-id="${t.id}">
+          <td><b>${t.id}</b></td>
+          <td>${t.subsystem}</td>
+          <td>${linddunTagString(t)}</td>
+          <td>${linddun.personalData}</td>
+          <td>${linddun.privacyImpact}</td>
+          <td>${linddun.privacyControls.join("; ") || "—"}</td>
+          <td>${t.likelihoodScore}</td>
+          <td>${t.impactScore}</td>
+        </tr>
+      `;
+    }).join("");
+    if (threatTableBody) threatTableBody.innerHTML = "";
+  } else {
+    threatTableBody.innerHTML = pageRows.map(t => `
+      <tr data-id="${t.id}">
+        <td><b>${t.id}</b></td>
+        <td>${t.subsystem}</td>
+        <td>${t.componentsAffected}</td>
+        <td>${t.dataAsset}</td>
+        <td>${t.dataFlow}</td>
+        <td>${xmark(t.stride.S)}</td>
+        <td>${xmark(t.stride.T)}</td>
+        <td>${xmark(t.stride.R)}</td>
+        <td>${xmark(t.stride.I)}</td>
+        <td>${xmark(t.stride.D)}</td>
+        <td>${xmark(t.stride.E)}</td>
+        <td>${t.threatName}</td>
+        <td>${t.threatDescription}</td>
+        <td>${t.possibleImpact}</td>
+        <td>${t.likelihoodScore}</td>
+        <td>${t.impactScore}</td>
+      </tr>
+    `).join("");
+    if (privacyTableBody) privacyTableBody.innerHTML = "";
+  }
   // Update pagination UI
   if (threatPageNum) threatPageNum.textContent = currentThreatPage;
   if (threatPageTotal) threatPageTotal.textContent = total;
 
-  threatTableBody.querySelectorAll("tr").forEach(tr => {
+  const activeBody = privacyMode ? privacyTableBody : threatTableBody;
+  activeBody.querySelectorAll("tr").forEach(tr => {
     tr.addEventListener("click", () => showThreat(tr.dataset.id));
   });
 }
@@ -1359,6 +1576,15 @@ function showThreat(id) {
   const t = threats.find(x => x.id === id);
   if (!t) return;
   const score = t.likelihoodScore * t.impactScore;
+  const linddun = normalizeLinddun(t);
+  const privacyBlock = privacyMode ? `
+      <hr style="border:none;border-top:1px solid rgba(255,255,255,.12);margin:12px 0;">
+      <p><b>Privacy Risks (LINDDUN)</b></p>
+      <p><b>Categories:</b> ${linddunTagString(t)}</p>
+      <p><b>Personal Data:</b> ${linddun.personalData}</p>
+      <p><b>Privacy Impact:</b> ${linddun.privacyImpact}</p>
+      <p><b>Privacy Controls:</b> ${linddun.privacyControls.join("; ") || "—"}</p>
+  ` : "";
   threatDetail.innerHTML = `
     <div class="kv">
       <b>${t.id} — ${t.threatName}</b>
@@ -1377,20 +1603,23 @@ function showThreat(id) {
       </p>
       <p><b>Description:</b> ${t.threatDescription}</p>
       <p><b>Possible Impact:</b> ${t.possibleImpact}</p>
+      ${privacyBlock}
     </div>
   `;
 }
 
 // Wiring: filters/search should reset to page 1
-[strideFilter, riskFilter].forEach(el => el.addEventListener("change", () => { currentThreatPage = 1; refreshThreatTable(); }));
-searchThreats.addEventListener("input", () => { currentThreatPage = 1; refreshThreatTable(); });
+[strideFilter, riskFilter].forEach(el => el && el.addEventListener("change", () => { currentThreatPage = 1; refreshThreatTable(); }));
+if (linddunFilter) linddunFilter.addEventListener("change", () => { currentThreatPage = 1; refreshThreatTable(); });
+if (searchThreats) searchThreats.addEventListener("input", () => { currentThreatPage = 1; refreshThreatTable(); });
+if (privacyToggleBtn) privacyToggleBtn.addEventListener("click", () => setPrivacyMode(!privacyMode));
 
 if (threatSort) threatSort.addEventListener('change', () => { currentThreatPage = 1; refreshThreatTable(); });
 if (threatPrevBtn) threatPrevBtn.addEventListener('click', () => { if (currentThreatPage>1) { currentThreatPage--; refreshThreatTable(); } });
 if (threatNextBtn) threatNextBtn.addEventListener('click', () => { currentThreatPage++; refreshThreatTable(); });
 
 // Initialize
-refreshThreatTable();
+setPrivacyMode(false);
 
 // ─── Risk Matrix ──────────────────────────────────────────────────────────────
 const matrix       = document.getElementById("riskMatrix");
@@ -1475,9 +1704,10 @@ function showBand(riskScore) {
     link.addEventListener("click", (e) => {
       e.preventDefault();
       const threatId = link.dataset.threatId;
-      const threatRow = document.querySelector(`#threatTable tbody tr[data-id="${threatId}"]`);
+      const threatRow = document.querySelector(`#threatTable tbody tr[data-id="${threatId}"]`) ||
+                        document.querySelector(`#privacyTable tbody tr[data-id="${threatId}"]`);
       if (threatRow) {
-        document.querySelectorAll("#threatTable tbody tr").forEach(r => r.classList.remove("highlighted"));
+        document.querySelectorAll("#threatTable tbody tr, #privacyTable tbody tr").forEach(r => r.classList.remove("highlighted"));
         threatRow.classList.add("highlighted");
         threatRow.scrollIntoView({ behavior: "smooth", block: "center" });
         showThreat(threatId);

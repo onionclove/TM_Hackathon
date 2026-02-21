@@ -401,6 +401,19 @@
               <option value="E">Elevation of Privilege</option>
             </select>
 
+            <button id="privacyToggleBtn" class="btn small ghost" type="button">Privacy Lens: Off</button>
+
+            <select id="linddunFilter" class="select" style="display:none;">
+              <option value="ALL">All LINDDUN</option>
+              <option value="L">L (Linkability)</option>
+              <option value="I">I (Identifiability)</option>
+              <option value="N">N (Non-repudiation)</option>
+              <option value="D">D (Detectability)</option>
+              <option value="Di">Di (Information Disclosure)</option>
+              <option value="U">U (Unawareness)</option>
+              <option value="Nc">Nc (Non-compliance)</option>
+            </select>
+
             <select id="riskFilter" class="select">
               <option value="ALL">All Risk Levels</option>
               <option value="Acceptable">Acceptable (1-4)</option>
@@ -458,6 +471,23 @@
                 <th>Threat Name</th>
                 <th>Threat Description</th>
                 <th>Possible Impact</th>
+                <th>Likelihood Score</th>
+                <th>Impact Score</th>
+              </tr>
+            </thead>
+            <tbody>
+              <!-- injected by JS -->
+            </tbody>
+          </table>
+          <table class="table" id="privacyTable" style="display:none;">
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Subsystem</th>
+                <th>LINDDUN Categories</th>
+                <th>Personal Data</th>
+                <th>Privacy Impact</th>
+                <th>Privacy Controls</th>
                 <th>Likelihood Score</th>
                 <th>Impact Score</th>
               </tr>
