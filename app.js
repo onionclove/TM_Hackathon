@@ -14,21 +14,21 @@ window.addEventListener("scroll", () => {
   }
 });
 
-// ─── Tabs ────────────────────────────────────────────────────────────────────
-const tabs = Array.from(document.querySelectorAll(".tab"));
-const views = {
+// ─── DFD Tabs (scoped to #dfds only — keeps remediation tabs independent) ────
+const dfdTabGroup = Array.from(document.querySelectorAll("#dfds .tab"));
+const dfdViews = {
   system:  document.getElementById("dfd-system"),
   media:   document.getElementById("dfd-media"),
   payment: document.getElementById("dfd-payment"),
   auth:    document.getElementById("dfd-auth"),
 };
 
-tabs.forEach(btn => {
+dfdTabGroup.forEach(btn => {
   btn.addEventListener("click", () => {
-    tabs.forEach(t => t.classList.remove("active"));
+    dfdTabGroup.forEach(t => t.classList.remove("active"));
     btn.classList.add("active");
-    Object.values(views).forEach(v => v?.classList.remove("active"));
-    views[btn.dataset.tab]?.classList.add("active");
+    Object.values(dfdViews).forEach(v => v?.classList.remove("active"));
+    dfdViews[btn.dataset.tab]?.classList.add("active");
   });
 });
 
@@ -684,23 +684,35 @@ const threats = [
     mitigations: [
       {
         title: "HMAC Signature Verification",
-        description: "Every webhook must include an HMAC-SHA256 signature computed with a shared secret. Verify the signature matches before processing.",
+        description: "Every webhook must include an HMAC-SHA256 signature computed with a shared secret.",
+        targetComponent: "API Gateway",
+        implementation: "API Gateway validates X-Signature header against HMAC-SHA256(secret, body); secret is read from Secrets Vault. Reject with 403 if mismatch.",
         priority: "CRITICAL",
+        effort: "low",
       },
       {
         title: "Timestamp Validation",
         description: "Reject webhooks older than 5 minutes to prevent replay of old events.",
+        targetComponent: "API Gateway",
+        implementation: "Compare Date header to server time; reject if >5m skew. Log and alert frequent replays.",
         priority: "HIGH",
+        effort: "low",
       },
       {
         title: "Webhook Secret Rotation",
         description: "Rotate webhook secrets regularly and store in Secrets Vault with restricted access.",
+        targetComponent: "Secrets Vault",
+        implementation: "Schedule automatic rotation every 30 days; deploy new secret to provider and update gateway atomically.",
         priority: "HIGH",
+        effort: "medium",
       },
       {
         title: "Event Source Verification",
         description: "Confirm webhook origin through TLS certificate pinning or IP allowlist if the provider supports it.",
+        targetComponent: "API Gateway",
+        implementation: "Validate client certificate or check source IP against provider docs before processing.",
         priority: "MEDIUM",
+        effort: "medium",
       },
     ],
   },
@@ -720,22 +732,34 @@ const threats = [
       {
         title: "Idempotency Key Storage",
         description: "Store processed event IDs in a cache/database with TTL. Reject duplicate event IDs immediately.",
+        targetComponent: "Payment Integration Adapter",
+        implementation: "Maintain a Redis set of provider event IDs; look up and reject if seen. Keys expire after 24h.",
         priority: "CRITICAL",
+        effort: "medium",
       },
       {
         title: "Idempotent State Machine",
         description: "Design order state transitions to be idempotent—re-applying same event yields same result.",
+        targetComponent: "Marketplace Service",
+        implementation: "Ensure PENDING → PAID transition is conditional on current state; re-processing does nothing.",
         priority: "CRITICAL",
+        effort: "medium",
       },
       {
         title: "Provider Event Deduplication",
         description: "Use provider's event ID as primary key rather than timestamp to prevent accidental duplicates.",
+        targetComponent: "Payment Integration Adapter",
+        implementation: "Persist external event_id with each webhook and use UNIQUE constraint to error on reuse.",
         priority: "HIGH",
+        effort: "low",
       },
       {
         title: "Delivery Guarantees",
         description: "Implement at-least-once delivery semantics with retry-after backoff on the client side.",
+        targetComponent: "Marketplace Service",
+        implementation: "Webhook client should retry with exponential backoff and idempotency key to avoid loss.",
         priority: "MEDIUM",
+        effort: "low",
       },
     ],
   },
@@ -1417,6 +1441,138 @@ const threats = [
 ];
 
 
+// ─── control registry and mappings ─────────────────────────────────────────
+// this structure lets us manage a catalog of controls separately from threats
+// and have threats reference them by ID.  We auto‑populate the registry from
+// any existing `mitigations` entries for backwards compatibility.
+const controlRegistry = [];
+const controlIndex = {}; // title -> entry
+
+// helper to assign family based on title keywords
+function getFamily(title) {
+  const t = title.toLowerCase();
+  if (t.includes('webhook') || t.includes('hmac') || t.includes('signature') || t.includes('timestamp') || t.includes('secret') && !t.includes('rotation')) return { id: "F-01", name: "Webhook Security" };
+  if (t.includes('idempotency') || t.includes('deduplication') || t.includes('state machine') || t.includes('server-side') || t.includes('pricing') || t.includes('sku') || t.includes('audit') && t.includes('transaction')) return { id: "F-02", name: "Transaction Integrity" };
+  if (t.includes('refund') || t.includes('chargeback') || t.includes('entitlement') || t.includes('exactly-once') || (t.includes('idempotent') && t.includes('entitlement'))) return { id: "F-03", name: "Refund & Fraud Controls" };
+  if (t.includes('rate limit') || t.includes('throttl') || t.includes('lockout') || t.includes('captcha') || t.includes('bot') || t.includes('risk') || t.includes('mfa') || t.includes('adaptive') || t.includes('velocity') || t.includes('bin')) return { id: "F-04", name: "Abuse Throttling & Bot Resistance" };
+  if (t.includes('token') || t.includes('jwt') || t.includes('session') || t.includes('cookie') || t.includes('https') || t.includes('tls') || t.includes('rotation') && t.includes('key')) return { id: "F-05", name: "Session & Token Security" };
+  if ((t.includes('mfa') && t.includes('enforce')) || t.includes('identity') || (t.includes('credential') && !t.includes('stuffing')) || t.includes('reset') || t.includes('sim swap')) return { id: "F-06", name: "Identity & MFA Hardening" };
+  if (t.includes('credential') && t.includes('stuffing') || (t.includes('reset') && t.includes('token')) || t.includes('constant-time') || t.includes('secure token')) return { id: "F-07", name: "Credential & Reset Protection" };
+  if (t.includes('age') || t.includes('minor') || t.includes('coppa') || t.includes('policy')) return { id: "F-08", name: "Minor Privacy & Policy Enforcement" };
+  if (t.includes('upload') || t.includes('file') || t.includes('content type') || t.includes('sandbox') || t.includes('size') || t.includes('validation') && t.includes('upload')) return { id: "F-09", name: "Upload Validation & Sandboxing" };
+  if (t.includes('bucket') || t.includes('storage') || t.includes('pre-signed') || (t.includes('audit') && t.includes('bucket'))) return { id: "F-10", name: "Storage Access Control" };
+  if (t.includes('moderator') || t.includes('auditability') || (t.includes('signature') && t.includes('moderation'))) return { id: "F-11", name: "Moderator Security & Auditability" };
+  if (t.includes('database') || t.includes('query') || t.includes('privilege') || t.includes('segmentation') || (t.includes('encrypt') && t.includes('seed'))) return { id: "F-12", name: "Database & Secrets Protection" };
+  return { id: "F-99", name: "Miscellaneous" };
+}
+
+// migrate old `mitigations` arrays into controlRegistry and assign controlIds
+threats.forEach(t => {
+  if (t.mitigations) {
+    t.controlIds = t.mitigations.map(m => {
+      const key = m.title.trim();
+      if (!controlIndex[key]) {
+        const id = `C-${String(controlRegistry.length + 1).padStart(2, "0")}`;
+        const fam = getFamily(m.title);
+        const entry = {
+          id,
+          familyId: fam.id,
+          familyName: fam.name,
+          title: m.title,
+          description: m.description,
+          targetComponent: m.targetComponent || m.target || (t.componentsAffected || "See related threat(s)"),
+          implementation: m.implementation || m.description,
+          priority: m.priority || "MEDIUM",
+          effort: m.effort || "TBD"
+        };
+        controlRegistry.push(entry);
+        controlIndex[key] = entry;
+      }
+      return controlIndex[key].id;
+    });
+    // do not delete t.mitigations; keep for backwards compatibility
+  }
+});
+
+// now build the `controlFamilies` array for UI
+const controlFamilies = [];
+const familyIndex = {};
+controlRegistry.forEach(c => {
+  if (!familyIndex[c.familyId]) {
+    familyIndex[c.familyId] = {
+      id: c.familyId,
+      name: c.familyName,
+      controls: [],
+      threats: new Set(),
+      totalRiskReduced: 0,
+      effort: c.effort // aggregate later
+    };
+    controlFamilies.push(familyIndex[c.familyId]);
+  }
+  familyIndex[c.familyId].controls.push(c);
+});
+
+// now build the `controls` array used by the UI, counting ROI
+// NOTE: controlFamilies[n].controls hold refs to controlRegistry entries (not clones).
+// We must NOT call c.threats on registry entries — they have no .threats field.
+// Instead we build a separate id-keyed map of cloned entries with .threats arrays,
+// then aggregate up to families from that map.
+const controls = [];
+const controlsById = {}; // id -> cloned control entry with .threats array
+
+function buildControls() {
+  // 1. Clone every registry entry and give it an empty threats array
+  controls.length = 0;
+  controlRegistry.forEach(c => {
+    const clone = { ...c, threats: [], roi: 0 };
+    controls.push(clone);
+    controlsById[c.id] = clone;
+  });
+
+  // 2. Walk threats and populate each control's .threats list
+  threats.forEach(t => {
+    (t.controlIds || []).forEach(cid => {
+      const ctrl = controlsById[cid];
+      if (ctrl) ctrl.threats.push(t.id);
+    });
+  });
+
+  // 3. Simple ROI: how many threats this control covers
+  controls.forEach(c => { c.roi = c.threats.length; });
+
+  // 4. Aggregate families — use controlsById (clones) not fam.controls (registry refs)
+  controlFamilies.forEach(fam => {
+    const coveredThreats = new Set();
+    let totalRisk = 0;
+
+    // map family's control IDs through the clones
+    fam.controls.forEach(registryEntry => {
+      const clone = controlsById[registryEntry.id];
+      if (!clone) return;
+      clone.threats.forEach(tid => {
+        if (!coveredThreats.has(tid)) {
+          coveredThreats.add(tid);
+          const threat = threats.find(t => t.id === tid);
+          if (threat) totalRisk += threat.likelihoodScore * threat.impactScore;
+        }
+      });
+    });
+
+    fam.threats = Array.from(coveredThreats);
+    fam.coverageCount = fam.threats.length;
+    fam.totalRiskReduced = totalRisk;
+
+    // Effort: take the max across controls in this family
+    const effortMap = { low: 1, medium: 2, high: 3 };
+    const efforts = fam.controls.map(c => effortMap[c.effort] || 2);
+    fam.effortValue = efforts.length ? Math.max(...efforts) : 2;
+    fam.roi = fam.effortValue > 0 ? fam.totalRiskReduced / fam.effortValue : 0;
+    fam.priority = fam.roi > 10 ? "P1" : fam.roi > 5 ? "P2" : "P3";
+  });
+}
+
+buildControls();
+
 // ─── Threat table ─────────────────────────────────────────────────────────────
 const strideFilter     = document.getElementById("strideFilter");
 const riskFilter       = document.getElementById("riskFilter");
@@ -1482,9 +1638,9 @@ function setPrivacyMode(on) {
 }
 
 function refreshThreatTable() {
-  const q              = (searchThreats.value || "").trim().toLowerCase();
-  const strideVal      = strideFilter.value;
-  const riskLevelVal   = riskFilter.value;
+  const q              = (searchThreats?.value || "").trim().toLowerCase();
+  const strideVal      = strideFilter?.value || "ALL";
+  const riskLevelVal   = riskFilter?.value || "ALL";
   const linddunVal     = (linddunFilter && linddunFilter.value) || "ALL";
 
   // Reset to first page when filters/search change
@@ -1640,7 +1796,7 @@ const impactLevels = [
   { score:1, label:"Insignificant" },
 ];
 
-function el(tag, cls, html) {
+function mkEl(tag, cls, html) {
   const d = document.createElement(tag);
   d.className = cls;
   d.innerHTML = html;
@@ -1650,13 +1806,13 @@ function el(tag, cls, html) {
 function buildMatrix() {
   if (!matrix) return;
   matrix.innerHTML = "";
-  matrix.appendChild(el("div","mhead","Impact \\ Likelihood"));
+  matrix.appendChild(mkEl("div","mhead","Impact \\ Likelihood"));
   likelihoodLevels.forEach(l =>
-    matrix.appendChild(el("div","mhead",`${l.score}<div style="font-size:10px;font-weight:normal">${l.label}</div>`))
+    matrix.appendChild(mkEl("div","mhead",`${l.score}<div style="font-size:10px;font-weight:normal">${l.label}</div>`))
   );
 
   impactLevels.forEach(impact => {
-    matrix.appendChild(el("div","mhead",`${impact.score}<div style="font-size:10px;font-weight:normal">${impact.label}</div>`));
+    matrix.appendChild(mkEl("div","mhead",`${impact.score}<div style="font-size:10px;font-weight:normal">${impact.label}</div>`));
     likelihoodLevels.forEach(likelihood => {
       const score = impact.score * likelihood.score;
       // Count threats matching this impact × likelihood
@@ -1667,7 +1823,7 @@ function buildMatrix() {
       const pipsHtml = matchingThreats.length > 0 
         ? `<div class="pips">${'<span class="pip">×</span>'.repeat(matchingThreats.length)}</div>`
         : '';
-      const cell  = el("div","mcell",`<div class="mcell-score">${score}</div>${pipsHtml}`);
+      const cell  = mkEl("div","mcell",`<div class="mcell-score">${score}</div>${pipsHtml}`);
       cell.dataset.score      = score;
       cell.dataset.riskLevel  = getRiskLevel(score);
       cell.dataset.threatCount = matchingThreats.length;
@@ -1743,7 +1899,8 @@ document.addEventListener("keydown", e => { if (e.key === "Escape") closeModal()
 
 // ─── Remediations Section ─────────────────────────────────────────────────────
 const remedSubsystemTabs = document.querySelectorAll("#remediations .tab");
-const remedThreatsList = document.getElementById("remedThreatsList");
+let remedThreatsList = document.getElementById("remedThreatsList");
+const remedThreatsBody = document.getElementById("remedThreatsBody");
 const remedDetail = document.getElementById("remedDetail");
 const remedThreatsTitle = document.getElementById("remedThreatsTitle");
 
@@ -1757,6 +1914,10 @@ function getRiskClass(score) {
 }
 
 function populateRemediationThreats(subsystem) {
+  // re-acquire list element in case DOM was replaced (e.g. after coverage view)
+  const listEl = document.getElementById("remedThreatsList");
+  if (listEl) remedThreatsList = listEl;
+
   // Handle Media Upload tab by showing both Upload Path and Quarantine threats
   let filtered;
   if (subsystem === "Media Upload") {
@@ -1767,10 +1928,11 @@ function populateRemediationThreats(subsystem) {
     filtered = threats.filter(t => t.subsystem === subsystem);
   }
   remedThreatsTitle.textContent = `Threats in ${subsystem.replace("Payment & Marketplace", "Payment & Services").replace("Auth", "Auth Services")}`;
-  remedThreatsList.innerHTML = filtered.map(t => {
-    const score = t.likelihoodScore * t.impactScore;
-    const riskClass = getRiskClass(score);
-    return `
+  if (remedThreatsList) {
+    remedThreatsList.innerHTML = filtered.map(t => {
+      const score = t.likelihoodScore * t.impactScore;
+      const riskClass = getRiskClass(score);
+      return `
       <li>
         <div class="threat-item" data-threat-id="${t.id}">
           <div class="threat-item-id">${t.id}</div>
@@ -1778,21 +1940,22 @@ function populateRemediationThreats(subsystem) {
           <div class="threat-item-risk ${riskClass}">Risk ${score}</div>
         </div>
       </li>
-    `;
-  }).join("");
-  
-  // Attach click handlers
-  remedThreatsList.querySelectorAll(".threat-item").forEach(el => {
-    el.addEventListener("click", () => {
-      const threatId = el.dataset.threatId;
-      showRemediationDetail(threatId);
+      `;
+    }).join("");
+
+    // Attach click handlers
+    remedThreatsList.querySelectorAll(".threat-item").forEach(el => {
+      el.addEventListener("click", () => {
+        const threatId = el.dataset.threatId;
+        showRemediationDetail(threatId);
+      });
     });
-  });
+  }
 }
 
 function showRemediationDetail(threatId) {
   const threat = threats.find(t => t.id === threatId);
-  if (!threat || !threat.mitigations) return;
+  if (!threat) return;
 
   currentRemediationThreat = threatId;
 
@@ -1804,6 +1967,35 @@ function showRemediationDetail(threatId) {
 
   const score = threat.likelihoodScore * threat.impactScore;
   const riskLevel = getRiskLevel(score);
+
+  // If the threat has no controlIds (e.g. mitigations weren't catalogued),
+  // fall back to rendering the raw mitigations array as a simple list.
+  if (!threat.controlIds || threat.controlIds.length === 0) {
+    const rawMits = threat.mitigations || [];
+    remedDetail.innerHTML = `
+      <div class="mitigation-pack-header">
+        <div>
+          <div class="threat-id-badge">${threat.id}</div>
+          <h4>${threat.threatName}</h4>
+          <div class="muted tiny">Risk Score: ${score} (${riskLevel})</div>
+        </div>
+      </div>
+      <div class="mitigations-list">
+        ${rawMits.map(m => `
+          <div class="mitigation-item">
+            <h5>${m.title}</h5>
+            <p>${m.description}</p>
+            ${m.implementation ? `<div class="control-impl">${m.implementation}</div>` : ''}
+            <div class="mitigation-tags">
+              <span class="mitigation-tag ${m.priority?.toLowerCase()}">${m.priority || 'MEDIUM'}</span>
+            </div>
+          </div>
+        `).join('')}
+        ${rawMits.length === 0 ? '<p class="muted">No mitigations defined yet.</p>' : ''}
+      </div>
+    `;
+    return;
+  }
 
   remedDetail.innerHTML = `
     <div class="mitigation-pack">
@@ -1878,16 +2070,21 @@ function showRemediationDetail(threatId) {
     </div>
   `).join('');
 
-  // Build controls from mitigations
-  controlsEl.innerHTML = threat.mitigations.map((m, i) => `
+  // Render controls referenced by this threat
+  controlsEl.innerHTML = (threat.controlIds || []).map((cid, i) => {
+    const m = controls.find(c => c.id === cid) || { title: cid, description: '', implementation: '', targetComponent: '' };
+    return `
     <div class="control-item" data-index="${i}">
       <div>
         <div class="control-name">${m.title}</div>
         <div class="control-desc">${m.description}</div>
+        ${m.implementation ? `<div class="control-impl">${m.implementation}</div>` : ''}
+        ${m.targetComponent ? `<div class="control-target"><small>Target: ${m.targetComponent}</small></div>` : ''}
       </div>
       <div class="control-indicator">○</div>
     </div>
-  `).join('');
+  `;
+  }).join('');
 
   // mapping heuristics: which step indexes a control should block
   function mapControlToSteps(title) {
@@ -1951,22 +2148,99 @@ function showRemediationDetail(threatId) {
   });
 }
 
-// Initialize remediations
+// helper: restore the threats list for the current subsystem
+function resetThreatsList() {
+  remedThreatsTitle.textContent = `Threats in ${currentRemediationSubsystem.replace("Payment & Marketplace", "Payment & Services").replace("Auth", "Auth Services")}`;
+  // Re-inject the ul if Coverage replaced the inner HTML
+  if (!document.getElementById("remedThreatsList")) {
+    remedThreatsBody.innerHTML = '<ul class="clean" id="remedThreatsList"></ul>';
+    remedThreatsList = document.getElementById("remedThreatsList");
+  }
+  populateRemediationThreats(currentRemediationSubsystem);
+}
+
+function populateFamilyTable() {
+  const tbody = document.getElementById("controlMappingTableBody");
+  controlFamilies.sort((a,b) => b.roi - a.roi);
+  tbody.innerHTML = controlFamilies.map(fam => `
+    <tr data-fam-id="${fam.id}" data-roi="${fam.roi}">
+      <td>${fam.name}</td>
+      <td><span class="roi-badge">${fam.threats.length}</span> ${fam.threats.join(", ")}</td>
+      <td>${fam.totalRiskReduced.toFixed(1)}</td>
+      <td>${fam.effortValue === 1 ? "Low" : fam.effortValue === 2 ? "Medium" : "High"}</td>
+      <td>${fam.priority}</td>
+    </tr>
+  `).join("");
+
+  tbody.querySelectorAll("tr").forEach(r => {
+    r.addEventListener("click", () => showFamilyDetail(r.dataset.famId));
+  });
+}
+
+function showFamilyDetail(id) {
+  const fam = controlFamilies.find(f => f.id === id);
+  if (!fam) return;
+  remedThreatsList?.querySelectorAll("li").forEach(el => el.classList.remove("active"));
+  const controlsList = fam.controls.map(c => `
+    <li>
+      <strong>${c.title}</strong> (${c.id})<br>
+      <small class="muted">${c.description}</small><br>
+      <small>Implementation: ${c.implementation}</small><br>
+      <small>Target: ${c.targetComponent} | Effort: ${c.effort} | Priority: ${c.priority}</small>
+    </li>
+  `).join("");
+  remedDetail.innerHTML = `
+    <h4>${fam.name} <small class="muted">(${fam.id})</small></h4>
+    <p><strong>Threats Covered:</strong> ${fam.threats.join(", ")}</p>
+    <p><strong>Total Risk Reduced:</strong> ${fam.totalRiskReduced.toFixed(1)}</p>
+    <p><strong>Effort:</strong> ${fam.effortValue === 1 ? "Low" : fam.effortValue === 2 ? "Medium" : "High"} &nbsp;&nbsp; <strong>Priority:</strong> ${fam.priority}</p>
+    <h5>Controls in this Family:</h5>
+    <ul>${controlsList}</ul>
+  `;
+}
+
+function showCoverage() {
+  remedThreatsTitle.textContent = "Mitigation Coverage";
+  remedThreatsBody.innerHTML = `
+    <div class="table-wrap">
+      <table class="table" id="controlMappingTable">
+        <thead>
+          <tr>
+            <th>Family</th>
+            <th>Threats Covered</th>
+            <th>Total Risk Reduced</th>
+            <th>Effort</th>
+            <th>Priority</th>
+          </tr>
+        </thead>
+        <tbody id="controlMappingTableBody"></tbody>
+      </table>
+    </div>
+  `;
+  populateFamilyTable();
+  remedDetail.innerHTML = `<p class="muted">Click a control family to view implementation details and controls.</p>
+  <p class="muted tiny"><strong>ROI Calculation:</strong> Total risk reduced (sum of threat likelihood × impact scores) ÷ effort (Low=1, Medium=2, High=3). Higher ROI indicates better risk reduction per unit effort.</p>`;
+}
+
 remedSubsystemTabs?.forEach(tab => {
   tab.addEventListener("click", () => {
-    // Update active state
     document.querySelectorAll("#remediations .tab").forEach(t => t.classList.remove("active"));
     tab.classList.add("active");
-    
+
     const subsystem = tab.dataset.subsystem;
     currentRemediationSubsystem = subsystem;
-    populateRemediationThreats(subsystem);
-    remedDetail.innerHTML = `
-      <div class="remediation-empty">
-        <div style="font-size: 32px; margin-bottom: 10px;">:)</div>
-        <p class="muted">Click a threat to view mitigations</p>
-      </div>
-    `;
+
+    if (subsystem === "Coverage") {
+      showCoverage();
+    } else {
+      resetThreatsList();
+      remedDetail.innerHTML = `
+        <div class="remediation-empty">
+          <div style="font-size: 32px; margin-bottom: 10px;">:)</div>
+          <p class="muted">Click a threat to view mitigations</p>
+        </div>
+      `;
+    }
   });
 });
 

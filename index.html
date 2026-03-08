@@ -506,7 +506,7 @@
     <section id="remediations" class="panel">
       <div class="panel-head">
         <h2>6. Remediations & Mitigations</h2>
-        <p class="muted">Browse by subsystem and deep-dive into actionable solutions.</p>
+        <p class="muted">Browse by subsystem, analyse controls, or view mitigation coverage &amp; ROI.</p>
       </div>
 
       <!-- Subsystem tabs -->
@@ -514,13 +514,14 @@
         <button class="tab active" role="tab" aria-selected="true" data-subsystem="Payment & Marketplace">Payment & Services</button>
         <button class="tab" role="tab" aria-selected="false" data-subsystem="Media Upload">Media & Uploads</button>
         <button class="tab" role="tab" aria-selected="false" data-subsystem="Auth">Auth Services</button>
+        <button class="tab" role="tab" aria-selected="false" data-subsystem="Coverage">Mitigation Coverage</button>
       </div>
 
       <div class="grid two" id="remediationGrid">
         <!-- Threats list (left) -->
         <div class="card">
           <h3 id="remedThreatsTitle">Threats in Payment & Services</h3>
-          <div class="dfd-panel-body" style="max-height: 500px; overflow-y: auto;">
+          <div class="dfd-panel-body" id="remedThreatsBody" style="max-height: 500px; overflow-y: auto;">
             <ul class="clean" id="remedThreatsList">
               <!-- injected by JS -->
             </ul>
