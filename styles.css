@@ -130,7 +130,7 @@ code { font-family: var(--mono); font-size: .95em }
 .btn:hover {
   border-color: var(--accent);
   box-shadow: 0 0 20px rgba(108, 92, 231, .15);
-  /* No translateY — lifting the button moves it out from under the cursor,
+  /* No translateY - lifting the button moves it out from under the cursor,
      causing a flicker loop identical to the card hover bug. */
 }
 
@@ -373,7 +373,7 @@ code { font-family: var(--mono); font-size: .95em }
   box-shadow: 0 0 0 3px rgba(108, 92, 231, .15);
 }
 
-/* ── Reset zoom button — shown only when zoomed ── */
+/* -- Reset zoom button - shown only when zoomed -- */
 .zoom-reset {
   padding: 6px 14px;
   border-radius: 999px;
@@ -402,7 +402,7 @@ code { font-family: var(--mono); font-size: .95em }
   cursor: pointer;
   opacity: .55;
   transition: opacity .15s ease, background .15s ease, border-color .15s ease, box-shadow .15s ease;
-  /* NOTE: no transform on hotspots — they share the parent's scale */
+  /* NOTE: no transform on hotspots - they share the parent's scale */
   z-index: 5;
 }
 .hotspot:hover {
@@ -481,7 +481,7 @@ code { font-family: var(--mono); font-size: .95em }
 .details { margin-top: 10px }
 .details summary { cursor: pointer; color: var(--text); font-weight: 800; padding: 8px 0; transition: color .2s ease }
 .details summary:hover { color: var(--accent) }
-/* assumptions table sits inside a half-width card — let it scroll instead of breaking out */
+/* assumptions table sits inside a half-width card - let it scroll instead of breaking out */
 .details .table-wrap { width: 100%; overflow-x: auto }
 #assumptionsTable { min-width: 600px }
 

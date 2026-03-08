@@ -14,7 +14,7 @@ window.addEventListener("scroll", () => {
   }
 });
 
-// ─── DFD Tabs (scoped to #dfds only — keeps remediation tabs independent) ────
+// --- DFD Tabs (scoped to #dfds only - keeps remediation tabs independent) ----
 const dfdTabGroup = Array.from(document.querySelectorAll("#dfds .tab"));
 const dfdViews = {
   system:  document.getElementById("dfd-system"),
@@ -245,7 +245,7 @@ const componentInfo = {
   },
   // ─── Authentication & Identity Components (based on authenticate-dfd.svg) ──
   authApiGateway: {
-    title: "API Gateway (DMZ — Auth Surface)",
+    title: "API Gateway (DMZ - Auth Surface)",
     meta: "TLS termination, rate limiting, auth routing",
     responsibilities: [
       "Terminates TLS for all auth endpoints (login, register, reset, MFA)",
@@ -264,7 +264,7 @@ const componentInfo = {
     topThreats: ["T-A01 Credential Stuffing", "T-A06 Auth Endpoint DoS", "T-A05 Session Hijacking"],
   },
   authService: {
-    title: "Auth Service (Identity — Core)",
+    title: "Auth Service (Identity - Core)",
     meta: "Registration, login, token issuance, MFA orchestration, risk evaluation",
     responsibilities: [
       "Handles email/password registration with bcrypt/argon2 hashing",
@@ -306,7 +306,7 @@ const componentInfo = {
     topThreats: ["T-A07 Minor Data Exposure / Age Flag Bypass", "Broken access control to other profiles", "PII leakage"],
   },
   authEmailWorker: {
-    title: "Email Worker (Background — Async)",
+    title: "Email Worker (Background - Async)",
     meta: "Async email dispatch for auth flows",
     responsibilities: [
       "Sends password reset emails with time-limited, single-use tokens",
@@ -393,7 +393,7 @@ const componentInfo = {
     meta: "Third-party email delivery (SendGrid/SES style)",
     responsibilities: [
       "Delivers password reset and verification emails to players",
-      "Not trusted by default — email content integrity depends on server-side token validation",
+      "Not trusted by default - email content integrity depends on server-side token validation",
     ],
     flows: [
       "Email Worker > External Email Provider: SMTP/API request",
@@ -407,7 +407,7 @@ const componentInfo = {
     meta: "Third-party TOTP/SMS OTP provider (Twilio/Authy style)",
     responsibilities: [
       "Processes SMS OTP delivery or TOTP verification requests from MFA Service",
-      "Availability directly impacts MFA flow — outages can block user login",
+      "Availability directly impacts MFA flow - outages can block user login",
     ],
     flows: [
       "MFA Service > External MFA/SMS Provider: OTP/TOTP external dependency",
@@ -416,7 +416,7 @@ const componentInfo = {
     topThreats: ["T-A04 MFA Bypass (SMS interception / SIM swap)", "Provider downtime blocking login", "OTP replay"],
   },
   authSecretsVault: {
-    title: "Secrets Vault (Auth Keys — Out of Control)",
+    title: "Secrets Vault (Auth Keys - Out of Control)",
     meta: "JWT signing keys, SMTP credentials, MFA API keys",
     responsibilities: [
       "Stores JWT signing keys used by Auth Service",
@@ -534,7 +534,7 @@ compNextBtn?.addEventListener("click", () => {
   }
 });
 
-// ─── DFD ZOOM — transform-origin approach ────────────────────────────────────
+// --- DFD ZOOM - transform-origin approach ---
 //
 // HOW IT WORKS:
 //   Both the DFD image and its hotspot overlays sit inside .dfd-wrap,
@@ -546,7 +546,7 @@ compNextBtn?.addEventListener("click", () => {
 //
 //   We set  img.style.transformOrigin = "X% Y%"  so CSS scales the image
 //   *toward* that exact point, naturally bringing the component into view.
-//   No scroll arithmetic needed — the browser does the geometry for us.
+//   No scroll arithmetic needed - the browser does the geometry for us.
 //
 //   Hotspots are NOT scaled themselves (they're siblings/children of the
 //   wrap, not of the img), so they stay visually in place and remain
@@ -739,7 +739,7 @@ const threats = [
       },
       {
         title: "Idempotent State Machine",
-        description: "Design order state transitions to be idempotent—re-applying same event yields same result.",
+        description: "Design order state transitions to be idempotent-re-applying same event yields same result.",
         targetComponent: "Marketplace Service",
         implementation: "Ensure PENDING → PAID transition is conditional on current state; re-processing does nothing.",
         priority: "CRITICAL",
@@ -1144,7 +1144,7 @@ const threats = [
     dataFlow: "Player → API Gateway → Auth Service",
     stride: { S:false, T:false, R:false, I:false, D:true, E:false },
     threatName: "Auth Endpoint DoS / Resource Exhaustion",
-    threatDescription: "Attacker floods auth endpoints (login, register, password reset) or admin revocation (A6 — revocation endpoint) with high-volume requests. Password hashing (bcrypt/argon2) is intentionally CPU-expensive, making auth services especially vulnerable to resource exhaustion.",
+    threatDescription: "Attacker floods auth endpoints (login, register, password reset) or admin revocation (A6 - revocation endpoint) with high-volume requests. Password hashing (bcrypt/argon2) is intentionally CPU-expensive, making auth services especially vulnerable to resource exhaustion.",
     possibleImpact: "All players unable to log in or register, complete game service outage for new and returning users, reputational damage.",
     likelihoodScore: 4,
     impactScore: 4,
@@ -1184,7 +1184,7 @@ const threats = [
     dataFlow: "Auth Service → Policy Service → User Profile Service → User DB",
     stride: { S:false, T:true, R:false, I:true, D:false, E:false },
     threatName: "Minor Data Exposure / Age Flag Bypass",
-    threatDescription: "Attacker tampers with DOB during registration to bypass age restrictions (A7 — minor policy bypass), or exploits broken access controls to access profiles of minor users. If age flags are stored client-side or in JWT claims without Policy Service re-validation, a minor could self-remove restrictions.",
+    threatDescription: "Attacker tampers with DOB during registration to bypass age restrictions (A7 - minor policy bypass), or exploits broken access controls to access profiles of minor users. If age flags are stored client-side or in JWT claims without Policy Service re-validation, a minor could self-remove restrictions.",
     possibleImpact: "Minors exposed to unmoderated chat, marketplace, and adult content. Regulatory violations (COPPA/GDPR-K) leading to significant fines and legal action.",
     likelihoodScore: 3,
     impactScore: 5,
@@ -1514,7 +1514,7 @@ controlRegistry.forEach(c => {
 
 // now build the `controls` array used by the UI, counting ROI
 // NOTE: controlFamilies[n].controls hold refs to controlRegistry entries (not clones).
-// We must NOT call c.threats on registry entries — they have no .threats field.
+// We must NOT call c.threats on registry entries - they have no .threats field.
 // Instead we build a separate id-keyed map of cloned entries with .threats arrays,
 // then aggregate up to families from that map.
 const controls = [];
@@ -1540,7 +1540,7 @@ function buildControls() {
   // 3. Simple ROI: how many threats this control covers
   controls.forEach(c => { c.roi = c.threats.length; });
 
-  // 4. Aggregate families — use controlsById (clones) not fam.controls (registry refs)
+  // 4. Aggregate families - use controlsById (clones) not fam.controls (registry refs)
   controlFamilies.forEach(fam => {
     const coveredThreats = new Set();
     let totalRisk = 0;
@@ -1623,7 +1623,7 @@ function getActiveLinddunCats(threat) {
 
 function linddunTagString(threat) {
   const cats = getActiveLinddunCats(threat);
-  return cats.length ? cats.join(", ") : "—";
+  return cats.length ? cats.join(", ") : "-";
 }
 
 function setPrivacyMode(on) {
@@ -1688,7 +1688,7 @@ function refreshThreatTable() {
           <td>${linddunTagString(t)}</td>
           <td>${linddun.personalData}</td>
           <td>${linddun.privacyImpact}</td>
-          <td>${linddun.privacyControls.join("; ") || "—"}</td>
+          <td>${linddun.privacyControls.join("; ") || "-"}</td>
           <td>${t.likelihoodScore}</td>
           <td>${t.impactScore}</td>
         </tr>
@@ -1739,11 +1739,11 @@ function showThreat(id) {
       <p><b>Categories:</b> ${linddunTagString(t)}</p>
       <p><b>Personal Data:</b> ${linddun.personalData}</p>
       <p><b>Privacy Impact:</b> ${linddun.privacyImpact}</p>
-      <p><b>Privacy Controls:</b> ${linddun.privacyControls.join("; ") || "—"}</p>
+      <p><b>Privacy Controls:</b> ${linddun.privacyControls.join("; ") || "-"}</p>
   ` : "";
   threatDetail.innerHTML = `
     <div class="kv">
-      <b>${t.id} — ${t.threatName}</b>
+      <b>${t.id} - ${t.threatName}</b>
       <div class="muted tiny">${t.subsystem}</div>
       <p style="margin:8px 0">
         <b>Risk Score:</b>
@@ -1849,7 +1849,7 @@ function showBand(riskScore) {
       <b>Risk Score: ${riskScore} (${getRiskLevel(riskScore)})</b>
       <div class="muted tiny">${matches.length} threat(s)</div>
       <ul class="clean">
-        ${matches.map(t => `<li><a href="#" class="band-threat-link" data-threat-id="${t.id}"><b>${t.id}</b></a> — ${t.threatName} (L:${t.likelihoodScore} × I:${t.impactScore})</li>`).join("")
+        ${matches.map(t => `<li><a href="#" class="band-threat-link" data-threat-id="${t.id}"><b>${t.id}</b></a> - ${t.threatName} (L:${t.likelihoodScore} × I:${t.impactScore})</li>`).join("")
           || "<li class='muted'>No threats with this exact score.</li>"}
       </ul>
     </div>
