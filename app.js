@@ -2219,8 +2219,9 @@ function showCoverage() {
   `;
   populateFamilyTable();
   remedDetail.innerHTML = `<p class="muted">Click a control family to view implementation details and controls.</p>
-  <p class="muted tiny"><strong>ROI Calculation:</strong> Total risk reduced (sum of threat likelihood × impact scores) ÷ effort (Low=1, Medium=2, High=3). Higher ROI indicates better risk reduction per unit effort.</p>`;
+  <p class="muted tiny">Metrics: <strong>Total Risk Reduced</strong> = sum of (likelihood × impact) for covered threats. <strong>Effort</strong> = max effort of controls in family (Low=1, Medium=2, High=3). <strong>Priority</strong> = P1 if risk reduced ÷ effort >10, P2 if >5, else P3.</p>`;
 }
+
 
 remedSubsystemTabs?.forEach(tab => {
   tab.addEventListener("click", () => {
